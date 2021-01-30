@@ -19,6 +19,8 @@ export interface HttpRequestBuilder {
 
   buffer(): Promise<Buffer>;
 
+  void(): Promise<void>;
+
   readonly add: HttpRequestAdd<HttpRequestBuilder>;
 
   appendConfig(config: HttpClientConfig): HttpRequestBuilder;
@@ -49,6 +51,7 @@ export class HttpRequestBuilder {
   };
 
   json<T = any>(): Promise<T> {
+    this.add.header("Accept", "application/json; utf-8");
     const input = this.getPerformInput("text");
     return this.perform(input)
       .then(res => JSON.parse(res.data));
@@ -64,6 +67,11 @@ export class HttpRequestBuilder {
     const input = this.getPerformInput("buffer");
     return this.perform(input)
       .then(res => res.data);
+  };
+
+  void(): Promise<void> {
+    const input = this.getPerformInput("void");
+    return this.perform(input).then();
   };
 
   appendConfig(config: HttpClientConfig): HttpRequestBuilder {
@@ -109,9 +117,10 @@ export class HttpRequestBuilder {
       return this;
     },
     jsonBody: (body) => {
+      this.add.header("Content-Type", "application/json; utf-8");
       this.#body = {
-        value: body,
-        type: "json",
+        value: JSON.stringify(body),
+        type: "text",
       };
       return this;
     },
@@ -119,11 +128,11 @@ export class HttpRequestBuilder {
 
   private getPerformInput(responseType: HttpRequestPerformerResponseType): HttpRequestPerformInput {
     const urlParamsString = this.#config.urlParams.toString();
-    const normalizedBaseUrl = this.normalizeBaseUrl(this.#config.baseUrl);
+    const joinedUrl = this.joinUrl(this.#config.baseUrl, this.url, urlParamsString);
 
     return {
       method: this.method,
-      url: `${normalizedBaseUrl}${this.url}${urlParamsString ? `?${urlParamsString}` : ""}`,
+      url: joinedUrl,
       bodyType: this.#body.type,
       body: this.#body.value,
       headers: this.#config.headers,
@@ -132,10 +141,28 @@ export class HttpRequestBuilder {
     };
   }
 
-  private normalizeBaseUrl(url: string) {
-    if(!url) {
-      return "";
+  private joinUrl(base: string, url: string, params: string) {
+    let prefix = base || "";
+    let middle = url;
+    let suffix = params;
+
+    if(prefix.endsWith("/")) {
+      prefix = prefix.substr(0, prefix.length - 1);
     }
-    return url.endsWith("/") ? url : `${url}/`;
+
+    if(prefix && !url.startsWith("/")) {
+      prefix += "/";
+    }
+
+    if(suffix && !middle.endsWith("/?")) {
+      if(middle.endsWith("/")) {
+        suffix = "?" + suffix;
+      }
+      else {
+        suffix = "/?" + suffix;
+      }
+    }
+
+    return `${prefix}${middle}${suffix}`;
   }
 }

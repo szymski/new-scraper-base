@@ -3,8 +3,8 @@ import {HttpRequestBuilder} from "./http-request-builder";
 import {HttpRequestPerformer, HttpRequestPerformInput, HttpRequestPerformOutput} from "./http-request-performer";
 
 export type HttpMethod = "get" | "post" | "head" | "patch" | "delete" | "put";
-export type HttpRequestBodyType = "null" | "text" | "json";
-export type HttpRequestPerformerResponseType = "text" | "buffer";
+export type HttpRequestBodyType = "null" | "text";
+export type HttpRequestPerformerResponseType = "text" | "buffer" | "void";
 
 export interface HttpClient {
   get(url: string): HttpRequestBuilder;
