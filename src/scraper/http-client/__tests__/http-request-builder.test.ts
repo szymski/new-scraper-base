@@ -169,6 +169,22 @@ describe("HttpRequestBuilder", () => {
           }));
       });
 
+      test("Should not add base url if request url already has it", async () => {
+        client.config.baseUrl = "http://test.com";
+        await client.get("http://asd.com").void();
+        expect(spy)
+          .toBeCalledWith(expect.objectContaining({
+            url: "http://asd.com",
+          }));
+
+        client.config.baseUrl = "http://test.com";
+        await client.get("https://asd.com").void();
+        expect(spy)
+          .toBeCalledWith(expect.objectContaining({
+            url: "https://asd.com",
+          }));
+      });
+
       test("Should add slash to base url if missing", async () => {
         client.config.baseUrl = "http://test.com";
         await client.get("asd").void();
@@ -238,14 +254,14 @@ describe("HttpRequestBuilder", () => {
 
       const client = new HttpClient(performer);
       client.config
-        .add.requestInterceptor(async (config, input) => {
+        .add.requestInterceptor(async (input) => {
         input.body = "intercepted";
         return input;
       });
 
       await client
         .get("some_url")
-        .add.requestInterceptor(async (config, input) => {
+        .add.requestInterceptor(async (input) => {
           input.body += "123";
           return input;
         })
@@ -261,14 +277,14 @@ describe("HttpRequestBuilder", () => {
 
       const client = new HttpClient(performer);
       client.config
-        .add.responseInterceptor(async (config, output) => {
+        .add.responseInterceptor(async (output, config) => {
         output.data += "1";
         return output;
       });
 
       const res = await client
         .get("some_url")
-        .add.responseInterceptor(async (config, output) => {
+        .add.responseInterceptor(async (output, config) => {
           output.data += "2";
           return output;
         })

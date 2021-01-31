@@ -1,5 +1,5 @@
 import {HttpRequestAdd} from "./interfaces";
-import {HttpClientConfig, RequestInterceptorFunction, ResponseInterceptorFunction} from "./http-client-config";
+import {HttpClientConfig} from "./http-client-config";
 import Cheerio from "cheerio";
 import {
   HttpClient,
@@ -9,6 +9,11 @@ import {
 import CheerioAPI = cheerio.CheerioAPI;
 import Root = cheerio.Root;
 import {HttpRequestPerformInput, HttpRequestPerformOutput} from "./http-request-performer";
+import {
+  RequestInterceptorFunction,
+  RequestInterceptorLike,
+  ResponseInterceptorFunction, ResponseInterceptorLike
+} from "./interceptors/interfaces";
 
 export interface HttpRequestBuilder {
   appendConfig(config: HttpClientConfig): this;
@@ -182,11 +187,11 @@ export class HttpRequestBuilder {
       };
       return this;
     },
-    requestInterceptor: (interceptor: RequestInterceptorFunction) => {
+    requestInterceptor: (interceptor: RequestInterceptorLike) => {
       this.#config.add.requestInterceptor(interceptor);
       return this;
     },
-    responseInterceptor: (interceptor: ResponseInterceptorFunction) => {
+    responseInterceptor: (interceptor: ResponseInterceptorLike) => {
       this.#config.add.responseInterceptor(interceptor);
       return this;
     }
@@ -207,7 +212,7 @@ export class HttpRequestBuilder {
     };
 
     for (const interceptor of this.#config.interceptors.request) {
-      input = await interceptor(this.#config, input);
+      input = <any>await interceptor(input, this.#config) ?? input;
     }
 
     return input;
@@ -234,6 +239,10 @@ export class HttpRequestBuilder {
       }
     }
 
+    if (url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://")) {
+      prefix = "";
+    }
+
     return `${prefix}${middle}${suffix}`;
   }
 
@@ -241,7 +250,7 @@ export class HttpRequestBuilder {
     let response = await this.perform(input);
 
     for (const interceptor of this.#config.interceptors.response) {
-      response = await interceptor(this.#config, response);
+      response = <any>await interceptor(response, this.#config) ?? response;
     }
 
     return response;

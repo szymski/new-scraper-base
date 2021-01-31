@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node",
-    "test": "jest"
+    "test": "jest",
+    "example": "ts-node src/example.ts"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +24,7 @@
     "@types/node-fetch": "^2.5.8",
     "@types/tough-cookie": "^4.0.0",
     "prettier": "2.2.1",
+    "prettier-plugin-organize-imports": "^1.1.1",
     "ts-jest": "^26.5.0",
     "ts-node": "^9.1.1"
   }

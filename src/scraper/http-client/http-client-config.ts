@@ -1,6 +1,13 @@
-import {HttpHeaderAdd} from "./interfaces";
-import {Cookie, CookieJar} from "tough-cookie";
-import {HttpRequestPerformInput, HttpRequestPerformOutput} from "./http-request-performer";
+import { Cookie, CookieJar } from "tough-cookie";
+import { isRequestInterceptorObject, isResponseInterceptorObject } from "./interceptors/helpers";
+import {
+  InterceptorLike,
+  RequestInterceptorFunction,
+  RequestInterceptorLike,
+  ResponseInterceptorFunction,
+  ResponseInterceptorLike,
+} from "./interceptors/interfaces";
+import { HttpHeaderAdd } from "./interfaces";
 
 // TODO: Encoding
 export interface HttpClientConfig {
@@ -17,9 +24,6 @@ interface HttpClientConfigInterceptors {
   request: RequestInterceptorFunction[];
   response: ResponseInterceptorFunction[];
 }
-
-export type RequestInterceptorFunction = (config: HttpClientConfig, input: HttpRequestPerformInput) => Promise<HttpRequestPerformInput>;
-export type ResponseInterceptorFunction = (config: HttpClientConfig, input: HttpRequestPerformOutput) => Promise<HttpRequestPerformOutput>;
 
 export class HttpClientConfig {
   baseUrl!: string;
@@ -50,7 +54,7 @@ export class HttpClientConfig {
       return this;
     },
     urlParam: (key: string, value: string | number) => {
-      this.urlParams.set(key, value.toString())
+      this.urlParams.set(key, value.toString());
       return this;
     },
     urlParams: (params: Record<string, string | number>) => {
@@ -59,19 +63,32 @@ export class HttpClientConfig {
       }
       return this;
     },
-    requestInterceptor: (interceptor: RequestInterceptorFunction) => {
-      this.interceptors.request.push(interceptor);
+    requestInterceptor: (interceptor: RequestInterceptorLike) => {
+      this.interceptors.request.push(
+        isRequestInterceptorObject(interceptor) ? interceptor.interceptRequest : interceptor
+      );
       return this;
     },
-    responseInterceptor: (interceptor: ResponseInterceptorFunction) => {
-      this.interceptors.response.push(interceptor);
+    responseInterceptor: (interceptor: ResponseInterceptorLike) => {
+      this.interceptors.response.push(
+        isResponseInterceptorObject(interceptor) ? interceptor.interceptResponse : interceptor
+      );
+      return this;
+    },
+    interceptor: (interceptor: InterceptorLike) => {
+      if(isRequestInterceptorObject(interceptor)) {
+        this.interceptors.request.push(interceptor.interceptRequest);
+      }
+      if(isResponseInterceptorObject(interceptor)) {
+        this.interceptors.response.push(interceptor.interceptResponse);
+      }
       return this;
     }
   };
 
   clone(): HttpClientConfig {
     return HttpClientConfig.concat(this);
-  };
+  }
 
   static concat(...configs: HttpClientConfig[]): HttpClientConfig {
     const result = new HttpClientConfig();
@@ -79,7 +96,7 @@ export class HttpClientConfig {
 
     for (const config of configs) {
       result.baseUrl = config.baseUrl ?? result.baseUrl;
-      result.headers = {...result.headers, ...config.headers};
+      result.headers = { ...result.headers, ...config.headers };
       // TODO: Concat cookies
       config.urlParams.forEach((value, key) => result.urlParams.set(key, value));
       result.interceptors.request = [...result.interceptors.request, ...config.interceptors.request];

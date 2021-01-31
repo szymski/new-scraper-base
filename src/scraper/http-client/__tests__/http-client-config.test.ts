@@ -1,4 +1,5 @@
-import {HttpClientConfig, RequestInterceptorFunction, ResponseInterceptorFunction} from "../http-client-config";
+import {HttpClientConfig} from "../http-client-config";
+import {RequestInterceptorFunction, ResponseInterceptorFunction} from "../interceptors/interfaces";
 
 describe("HttpClientConfig", () => {
   describe("Add params", () => {
@@ -50,8 +51,8 @@ describe("HttpClientConfig", () => {
     config.add.header("h2", "test2");
     config.add.urlParam("p1", "param1");
     config.add.urlParam("p2", "param2");
-    const requestInterceptor: RequestInterceptorFunction = async (_, input) => input;
-    const responseInterceptor: ResponseInterceptorFunction = async (_, output) => output;
+    const requestInterceptor: RequestInterceptorFunction = async (input, _) => {};
+    const responseInterceptor: ResponseInterceptorFunction = async (output, _) => {};
     config.add.requestInterceptor(requestInterceptor);
     config.add.responseInterceptor(responseInterceptor);
 
@@ -75,10 +76,10 @@ describe("HttpClientConfig", () => {
   });
 
   test("Should concatenate 2 configs", () => {
-    const requestInterceptor1: RequestInterceptorFunction = async (_, input) => input;
-    const requestInterceptor2: RequestInterceptorFunction = async (_, input) => input;
-    const responseInterceptor1: ResponseInterceptorFunction = async (_, output) => output;
-    const responseInterceptor2: ResponseInterceptorFunction = async (_, output) => output;
+    const requestInterceptor1: RequestInterceptorFunction = async (input, _) => input;
+    const requestInterceptor2: RequestInterceptorFunction = async (input, _) => input;
+    const responseInterceptor1: ResponseInterceptorFunction = async (output, _) => output;
+    const responseInterceptor2: ResponseInterceptorFunction = async (output, _) => output;
 
     const config1: HttpClientConfig = new HttpClientConfig();
     config1.baseUrl = "base";
