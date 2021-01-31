@@ -1,5 +1,5 @@
 import {HttpRequestAdd} from "./interfaces";
-import {HttpClientConfig} from "./http-client-config";
+import {HttpClientConfig, RequestInterceptorFunction, ResponseInterceptorFunction} from "./http-client-config";
 import Cheerio from "cheerio";
 import {
   HttpClient,
@@ -11,6 +11,10 @@ import Root = cheerio.Root;
 import {HttpRequestPerformInput, HttpRequestPerformOutput} from "./http-request-performer";
 
 export interface HttpRequestBuilder {
+  appendConfig(config: HttpClientConfig): this;
+
+  replaceConfig(config: HttpClientConfig): this;
+
   json<T = any>(): Promise<T>;
 
   text(): Promise<string>;
@@ -21,10 +25,25 @@ export interface HttpRequestBuilder {
 
   void(): Promise<void>;
 
-  readonly add: HttpRequestAdd<HttpRequestBuilder>;
+  readonly withHeaders: {
+    json<T = any>(): Promise<HttpResponse<T>>;
 
-  appendConfig(config: HttpClientConfig): HttpRequestBuilder;
-  replaceConfig(config: HttpClientConfig): HttpRequestBuilder;
+    text(): Promise<HttpResponse<string>>;
+
+    cheerio(): Promise<HttpResponse<CheerioAPI | Root>>;
+
+    buffer(): Promise<HttpResponse<Buffer>>;
+
+    void(): Promise<HttpResponse<void>>;
+  };
+
+  readonly add: HttpRequestAdd<HttpRequestBuilder>;
+}
+
+interface HttpResponse<Data> {
+  status: number;
+  headers: Record<string, string>;
+  data: Data;
 }
 
 export class HttpRequestBuilder {
@@ -45,33 +64,23 @@ export class HttpRequestBuilder {
   }
 
   text(): Promise<string> {
-    const input = this.getPerformInput("text");
-    return this.perform(input)
-      .then(res => res.data);
+    return this.withHeaders.text().then(res => res.data);
   };
 
   json<T = any>(): Promise<T> {
-    this.add.header("Accept", "application/json; utf-8");
-    const input = this.getPerformInput("text");
-    return this.perform(input)
-      .then(res => JSON.parse(res.data));
+    return this.withHeaders.json<T>().then(res => res.data);
   };
 
   cheerio(): Promise<CheerioAPI | Root> {
-    const input = this.getPerformInput("text");
-    return this.perform(input)
-      .then(res => Cheerio.load(res.data));
+    return this.withHeaders.cheerio().then(res => res.data);
   };
 
   buffer(): Promise<Buffer> {
-    const input = this.getPerformInput("buffer");
-    return this.perform(input)
-      .then(res => res.data);
+    return this.withHeaders.buffer().then(res => res.data);
   };
 
   void(): Promise<void> {
-    const input = this.getPerformInput("void");
-    return this.perform(input).then();
+    return this.withHeaders.void().then(res => res.data);
   };
 
   appendConfig(config: HttpClientConfig): HttpRequestBuilder {
@@ -82,6 +91,55 @@ export class HttpRequestBuilder {
   replaceConfig(config: HttpClientConfig): HttpRequestBuilder {
     this.#config = config;
     return this;
+  };
+
+  readonly withHeaders = {
+    text: (): Promise<HttpResponse<string>> => {
+      return this.getPerformInput("text")
+        .then(input => this.performAndIntercept(input))
+        .then(res => ({
+          status: res.statusCode,
+          headers: res.headers,
+          data: res.data,
+        }));
+    },
+    json: <T = any>(): Promise<HttpResponse<T>> => {
+      this.add.header("Accept", "application/json; utf-8");
+      return this.getPerformInput("text")
+        .then(input => this.performAndIntercept(input))
+        .then(res => ({
+          status: res.statusCode,
+          headers: res.headers,
+          data: JSON.parse(res.data),
+        }));
+    },
+    cheerio: (): Promise<HttpResponse<CheerioAPI | Root>> => {
+      return this.getPerformInput("text")
+        .then(input => this.performAndIntercept(input))
+        .then(res => ({
+          status: res.statusCode,
+          headers: res.headers,
+          data: Cheerio.load(res.data),
+        }));
+    },
+    buffer: (): Promise<HttpResponse<Buffer>> => {
+      return this.getPerformInput("buffer")
+        .then(input => this.performAndIntercept(input))
+        .then(res => ({
+          status: res.statusCode,
+          headers: res.headers,
+          data: res.data,
+        }));
+    },
+    void: (): Promise<HttpResponse<void>> => {
+      return this.getPerformInput("void")
+        .then(input => this.performAndIntercept(input))
+        .then(res => ({
+          status: res.statusCode,
+          headers: res.headers,
+          data: undefined,
+        }));
+    },
   };
 
   readonly add: HttpRequestAdd<HttpRequestBuilder> = {
@@ -124,13 +182,21 @@ export class HttpRequestBuilder {
       };
       return this;
     },
+    requestInterceptor: (interceptor: RequestInterceptorFunction) => {
+      this.#config.add.requestInterceptor(interceptor);
+      return this;
+    },
+    responseInterceptor: (interceptor: ResponseInterceptorFunction) => {
+      this.#config.add.responseInterceptor(interceptor);
+      return this;
+    }
   };
 
-  private getPerformInput(responseType: HttpRequestPerformerResponseType): HttpRequestPerformInput {
+  private async getPerformInput(responseType: HttpRequestPerformerResponseType): Promise<HttpRequestPerformInput> {
     const urlParamsString = this.#config.urlParams.toString();
     const joinedUrl = this.joinUrl(this.#config.baseUrl, this.url, urlParamsString);
 
-    return {
+    let input: HttpRequestPerformInput = {
       method: this.method,
       url: joinedUrl,
       bodyType: this.#body.type,
@@ -139,6 +205,12 @@ export class HttpRequestBuilder {
       cookies: this.#config.cookies,
       responseType: responseType,
     };
+
+    for (const interceptor of this.#config.interceptors.request) {
+      input = await interceptor(this.#config, input);
+    }
+
+    return input;
   }
 
   private joinUrl(base: string, url: string, params: string) {
@@ -146,23 +218,32 @@ export class HttpRequestBuilder {
     let middle = url;
     let suffix = params;
 
-    if(prefix.endsWith("/")) {
+    if (prefix.endsWith("/")) {
       prefix = prefix.substr(0, prefix.length - 1);
     }
 
-    if(prefix && !url.startsWith("/")) {
+    if (prefix && !url.startsWith("/")) {
       prefix += "/";
     }
 
-    if(suffix && !middle.endsWith("/?")) {
-      if(middle.endsWith("/")) {
+    if (suffix && !middle.endsWith("/?")) {
+      if (middle.endsWith("/")) {
         suffix = "?" + suffix;
-      }
-      else {
+      } else {
         suffix = "/?" + suffix;
       }
     }
 
     return `${prefix}${middle}${suffix}`;
+  }
+
+  private async performAndIntercept(input: HttpRequestPerformInput) {
+    let response = await this.perform(input);
+
+    for (const interceptor of this.#config.interceptors.response) {
+      response = await interceptor(this.#config, response);
+    }
+
+    return response;
   }
 }

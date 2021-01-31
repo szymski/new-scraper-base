@@ -7,6 +7,8 @@ describe("HttpRequestBuilder", () => {
       async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
         return {
           data,
+          headers: {},
+          statusCode: 0,
         };
       },
     };
@@ -226,6 +228,53 @@ describe("HttpRequestBuilder", () => {
             url: "http://test.com/?param1=value",
           }));
       });
+    });
+  });
+
+  describe("Run interceptors", () => {
+    test("Should run request interceptors", async () => {
+      const performer = mockPerformer();
+      const performerSpy = jest.spyOn(performer, "perform");
+
+      const client = new HttpClient(performer);
+      client.config
+        .add.requestInterceptor(async (config, input) => {
+        input.body = "intercepted";
+        return input;
+      });
+
+      await client
+        .get("some_url")
+        .add.requestInterceptor(async (config, input) => {
+          input.body += "123";
+          return input;
+        })
+        .text();
+
+      expect(performerSpy).toBeCalledWith(expect.objectContaining({
+        body: "intercepted123",
+      }));
+    });
+
+    test("Should run response interceptors", async () => {
+      const performer = mockPerformer("original");
+
+      const client = new HttpClient(performer);
+      client.config
+        .add.responseInterceptor(async (config, output) => {
+        output.data += "1";
+        return output;
+      });
+
+      const res = await client
+        .get("some_url")
+        .add.responseInterceptor(async (config, output) => {
+          output.data += "2";
+          return output;
+        })
+        .text();
+
+      expect(res).toEqual("original12");
     });
   });
 });

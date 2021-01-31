@@ -1,4 +1,4 @@
-import {HttpClientConfig} from "../http-client-config";
+import {HttpClientConfig, RequestInterceptorFunction, ResponseInterceptorFunction} from "../http-client-config";
 
 describe("HttpClientConfig", () => {
   describe("Add params", () => {
@@ -50,6 +50,10 @@ describe("HttpClientConfig", () => {
     config.add.header("h2", "test2");
     config.add.urlParam("p1", "param1");
     config.add.urlParam("p2", "param2");
+    const requestInterceptor: RequestInterceptorFunction = async (_, input) => input;
+    const responseInterceptor: ResponseInterceptorFunction = async (_, output) => output;
+    config.add.requestInterceptor(requestInterceptor);
+    config.add.responseInterceptor(responseInterceptor);
 
     const clone = config.clone();
     expect(clone).not.toBe(config);
@@ -65,20 +69,32 @@ describe("HttpClientConfig", () => {
     expect(clone.urlParams.get("p2")).toEqual("param2");
 
     // TODO: Cookies
+
+    expect(clone.interceptors.request).toEqual([requestInterceptor]);
+    expect(clone.interceptors.response).toEqual([responseInterceptor]);
   });
 
   test("Should concatenate 2 configs", () => {
+    const requestInterceptor1: RequestInterceptorFunction = async (_, input) => input;
+    const requestInterceptor2: RequestInterceptorFunction = async (_, input) => input;
+    const responseInterceptor1: ResponseInterceptorFunction = async (_, output) => output;
+    const responseInterceptor2: ResponseInterceptorFunction = async (_, output) => output;
+
     const config1: HttpClientConfig = new HttpClientConfig();
     config1.baseUrl = "base";
     config1.add.header("h1", "test");
     config1.add.header("h2", "test2");
     config1.add.urlParam("p1", "param1");
     config1.add.urlParam("p2", "param2");
+    config1.add.requestInterceptor(requestInterceptor1);
 
     const config2: HttpClientConfig = new HttpClientConfig();
     config2.baseUrl = "overwritten";
     config2.add.header("h2", "overwritten");
     config2.add.urlParam("p1", "overwritten");
+    config2.add.requestInterceptor(requestInterceptor2);
+    config2.add.responseInterceptor(responseInterceptor1);
+    config2.add.responseInterceptor(responseInterceptor2);
 
     const concatenated = HttpClientConfig.concat(config1, config2);
 
@@ -93,5 +109,8 @@ describe("HttpClientConfig", () => {
     expect(concatenated.urlParams.get("p2")).toEqual("param2");
 
     // TODO: Cookies
+
+    expect(concatenated.interceptors.request).toEqual([requestInterceptor1, requestInterceptor2]);
+    expect(concatenated.interceptors.response).toEqual([responseInterceptor1, responseInterceptor2]);
   });
 });

@@ -1,4 +1,5 @@
 import {Cookie, CookieJar} from "tough-cookie";
+import {RequestInterceptorFunction, ResponseInterceptorFunction} from "./http-client-config";
 
 export interface HttpHeaderAdd<TReturn> {
   header(key: string, value: string): TReturn;
@@ -12,6 +13,10 @@ export interface HttpHeaderAdd<TReturn> {
   cookie(cookies: Cookie, url: string): TReturn;
 
   cookies(cookies: CookieJar): TReturn;
+
+  requestInterceptor(interceptor: RequestInterceptorFunction): TReturn;
+
+  responseInterceptor(interceptor: ResponseInterceptorFunction): TReturn;
 }
 
 export interface HttpBodyAdd<TReturn> {

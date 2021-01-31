@@ -16,5 +16,7 @@ export interface HttpRequestPerformInput {
 }
 
 export interface HttpRequestPerformOutput {
+  statusCode: number;
+  headers: Record<string, string>;
   data: any;
 }
