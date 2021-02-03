@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import {HttpRequestPerformer, HttpRequestPerformInput, HttpRequestPerformOutput} from "../http-request-performer";
+import { HttpRequestPerformer, HttpRequestPerformInput, HttpRequestPerformOutput } from "../http-request-performer";
 
 export class NodeFetchPerformer implements HttpRequestPerformer {
   async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {

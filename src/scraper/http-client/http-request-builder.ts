@@ -1,19 +1,11 @@
-import {HttpRequestAdd} from "./interfaces";
-import {HttpClientConfig} from "./http-client-config";
 import Cheerio from "cheerio";
-import {
-  HttpClient,
-  HttpMethod,
-  HttpRequestBodyType, HttpRequestPerformerResponseType,
-} from "./http-client";
+import { HttpClient, HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType } from "./http-client";
+import { HttpClientConfig } from "./http-client-config";
+import { HttpRequestPerformInput, HttpRequestPerformOutput } from "./http-request-performer";
+import { InterceptorLike, RequestInterceptorLike, ResponseInterceptorLike } from "./interceptors/interfaces";
+import { HttpRequestAdd } from "./interfaces";
 import CheerioAPI = cheerio.CheerioAPI;
 import Root = cheerio.Root;
-import {HttpRequestPerformInput, HttpRequestPerformOutput} from "./http-request-performer";
-import {
-  RequestInterceptorFunction,
-  RequestInterceptorLike,
-  ResponseInterceptorFunction, ResponseInterceptorLike
-} from "./interceptors/interfaces";
 
 export interface HttpRequestBuilder {
   appendConfig(config: HttpClientConfig): this;
@@ -54,7 +46,7 @@ interface HttpResponse<Data> {
 export class HttpRequestBuilder {
   #config: HttpClientConfig;
 
-  #body: { type: HttpRequestBodyType, value: any, } = {
+  #body: { type: HttpRequestBodyType; value: any } = {
     type: "null",
     value: null,
   };
@@ -63,46 +55,46 @@ export class HttpRequestBuilder {
     private readonly client: HttpClient,
     private readonly method: HttpMethod,
     private readonly url: string,
-    private readonly perform: (request: HttpRequestPerformInput) => Promise<HttpRequestPerformOutput>,
+    private readonly perform: (request: HttpRequestPerformInput) => Promise<HttpRequestPerformOutput>
   ) {
     this.#config = client.config.clone();
   }
 
   text(): Promise<string> {
-    return this.withHeaders.text().then(res => res.data);
-  };
+    return this.withHeaders.text().then((res) => res.data);
+  }
 
   json<T = any>(): Promise<T> {
-    return this.withHeaders.json<T>().then(res => res.data);
-  };
+    return this.withHeaders.json<T>().then((res) => res.data);
+  }
 
   cheerio(): Promise<CheerioAPI | Root> {
-    return this.withHeaders.cheerio().then(res => res.data);
-  };
+    return this.withHeaders.cheerio().then((res) => res.data);
+  }
 
   buffer(): Promise<Buffer> {
-    return this.withHeaders.buffer().then(res => res.data);
-  };
+    return this.withHeaders.buffer().then((res) => res.data);
+  }
 
   void(): Promise<void> {
-    return this.withHeaders.void().then(res => res.data);
-  };
+    return this.withHeaders.void().then((res) => res.data);
+  }
 
   appendConfig(config: HttpClientConfig): HttpRequestBuilder {
     this.#config = HttpClientConfig.concat(this.#config, config);
     return this;
-  };
+  }
 
   replaceConfig(config: HttpClientConfig): HttpRequestBuilder {
     this.#config = config;
     return this;
-  };
+  }
 
   readonly withHeaders = {
     text: (): Promise<HttpResponse<string>> => {
       return this.getPerformInput("text")
-        .then(input => this.performAndIntercept(input))
-        .then(res => ({
+        .then((input) => this.performAndIntercept(input))
+        .then((res) => ({
           status: res.statusCode,
           headers: res.headers,
           data: res.data,
@@ -111,8 +103,8 @@ export class HttpRequestBuilder {
     json: <T = any>(): Promise<HttpResponse<T>> => {
       this.add.header("Accept", "application/json; utf-8");
       return this.getPerformInput("text")
-        .then(input => this.performAndIntercept(input))
-        .then(res => ({
+        .then((input) => this.performAndIntercept(input))
+        .then((res) => ({
           status: res.statusCode,
           headers: res.headers,
           data: JSON.parse(res.data),
@@ -120,8 +112,8 @@ export class HttpRequestBuilder {
     },
     cheerio: (): Promise<HttpResponse<CheerioAPI | Root>> => {
       return this.getPerformInput("text")
-        .then(input => this.performAndIntercept(input))
-        .then(res => ({
+        .then((input) => this.performAndIntercept(input))
+        .then((res) => ({
           status: res.statusCode,
           headers: res.headers,
           data: Cheerio.load(res.data),
@@ -129,8 +121,8 @@ export class HttpRequestBuilder {
     },
     buffer: (): Promise<HttpResponse<Buffer>> => {
       return this.getPerformInput("buffer")
-        .then(input => this.performAndIntercept(input))
-        .then(res => ({
+        .then((input) => this.performAndIntercept(input))
+        .then((res) => ({
           status: res.statusCode,
           headers: res.headers,
           data: res.data,
@@ -138,8 +130,8 @@ export class HttpRequestBuilder {
     },
     void: (): Promise<HttpResponse<void>> => {
       return this.getPerformInput("void")
-        .then(input => this.performAndIntercept(input))
-        .then(res => ({
+        .then((input) => this.performAndIntercept(input))
+        .then((res) => ({
           status: res.statusCode,
           headers: res.headers,
           data: undefined,
@@ -194,7 +186,11 @@ export class HttpRequestBuilder {
     responseInterceptor: (interceptor: ResponseInterceptorLike) => {
       this.#config.add.responseInterceptor(interceptor);
       return this;
-    }
+    },
+    interceptor: (interceptor: InterceptorLike) => {
+      this.#config.add.interceptor(interceptor);
+      return this;
+    },
   };
 
   private async getPerformInput(responseType: HttpRequestPerformerResponseType): Promise<HttpRequestPerformInput> {
