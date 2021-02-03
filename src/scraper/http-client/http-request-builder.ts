@@ -1,5 +1,13 @@
 import Cheerio from "cheerio";
-import { HttpException, HttpInvalidUrlException, HttpTimeoutException } from "./exceptions";
+import {
+  HttpAddressNotFoundException,
+  HttpException,
+  HttpForbiddenException,
+  HttpInvalidUrlException,
+  HttpNotFoundException,
+  HttpTimeoutException,
+  HttpUnauthorizedException,
+} from "./exceptions";
 import { HttpClient, HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType } from "./http-client";
 import { HttpClientConfig } from "./http-client-config";
 import {
@@ -43,7 +51,7 @@ export interface HttpRequestBuilder {
   readonly add: HttpRequestAdd<HttpRequestBuilder>;
 }
 
-interface HttpResponse<Data> {
+export interface HttpResponse<Data> {
   status: number;
   headers: Record<string, string>;
   data: Data;
@@ -119,7 +127,7 @@ export class HttpRequestBuilder {
         .then((out) => this.processOutput(out, (res) => res.data));
     },
     void: (): Promise<HttpResponse<void>> => {
-      return this.getPerformInput("text")
+      return this.getPerformInput("void")
         .then((input) => this.performAndIntercept(input))
         .then((out) => this.processOutput(out, (res) => undefined));
     },
@@ -130,16 +138,29 @@ export class HttpRequestBuilder {
     getDataCallback: (res: HttpRequestPerformOutputSuccess) => T
   ): Promise<HttpResponse<T>> {
     if (output.success) {
-      return {
+      const response: HttpResponse<T> = {
         status: output.statusCode,
         headers: output.headers,
         data: await getDataCallback(output),
       };
+
+      if (output.statusCode === 404) {
+        throw new HttpNotFoundException(response);
+      } else if (output.statusCode === 403) {
+        throw new HttpForbiddenException(response);
+      } else if (output.statusCode === 401) {
+        throw new HttpUnauthorizedException(response);
+      } else {
+        return response;
+      }
     } else {
       if (output.errorCode === HttpRequestError.Timeout) {
         throw new HttpTimeoutException(output.errorMessage);
       } else if (output.errorCode === HttpRequestError.InvalidUrl) {
         throw new HttpInvalidUrlException(output.errorMessage);
+      }
+      if (output.errorCode === HttpRequestError.AddressNotFound) {
+        throw new HttpAddressNotFoundException(output.errorMessage);
       } else {
         throw new HttpException(output.errorMessage);
       }

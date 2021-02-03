@@ -1,3 +1,10 @@
+import {
+  HttpAddressNotFoundException,
+  HttpForbiddenException,
+  HttpInvalidUrlException,
+  HttpNotFoundException,
+  HttpTimeoutException, HttpUnauthorizedException,
+} from "../exceptions";
 import { HttpClient } from "../http-client";
 import {
   HttpRequestError,
@@ -5,7 +12,6 @@ import {
   HttpRequestPerformInput,
   HttpRequestPerformOutput,
 } from "../http-request-performer";
-import {HttpInvalidUrlException, HttpTimeoutException} from "../exceptions";
 
 describe("HttpRequestBuilder", () => {
   const mockPerformer = (data?: any): HttpRequestPerformer => {
@@ -313,9 +319,7 @@ describe("HttpRequestBuilder", () => {
 
       const t = () => client.get("test").void();
 
-      await expect(t())
-        .rejects
-        .toThrow(HttpTimeoutException);
+      await expect(t()).rejects.toThrow(HttpTimeoutException);
     });
 
     test("Should throw invalid url exception", async () => {
@@ -332,9 +336,81 @@ describe("HttpRequestBuilder", () => {
 
       const t = () => client.get("test").void();
 
-      await expect(t())
-        .rejects
-        .toThrow(HttpInvalidUrlException);
+      await expect(t()).rejects.toThrow(HttpInvalidUrlException);
+    });
+
+    test("Should throw address not found exception", async () => {
+      const performer: HttpRequestPerformer = {
+        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+          return {
+            success: false,
+            errorCode: HttpRequestError.AddressNotFound,
+          };
+        },
+      };
+
+      const client = new HttpClient(performer);
+
+      const t = () => client.get("test").void();
+
+      await expect(t()).rejects.toThrow(HttpAddressNotFoundException);
+    });
+
+    test("Should throw not found exception on 404", async () => {
+      const performer: HttpRequestPerformer = {
+        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+          return {
+            success: true,
+            statusCode: 404,
+            headers: {},
+            data: undefined,
+          };
+        },
+      };
+
+      const client = new HttpClient(performer);
+
+      const t = () => client.get("test").void();
+
+      await expect(t()).rejects.toThrow(HttpNotFoundException);
+    });
+
+    test("Should throw forbidden exception on 403", async () => {
+      const performer: HttpRequestPerformer = {
+        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+          return {
+            success: true,
+            statusCode: 403,
+            headers: {},
+            data: undefined,
+          };
+        },
+      };
+
+      const client = new HttpClient(performer);
+
+      const t = () => client.get("test").void();
+
+      await expect(t()).rejects.toThrow(HttpForbiddenException);
+    });
+
+    test("Should throw unauthorized exception on 401", async () => {
+      const performer: HttpRequestPerformer = {
+        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+          return {
+            success: true,
+            statusCode: 401,
+            headers: {},
+            data: undefined,
+          };
+        },
+      };
+
+      const client = new HttpClient(performer);
+
+      const t = () => client.get("test").void();
+
+      await expect(t()).rejects.toThrow(HttpUnauthorizedException);
     });
   });
 });

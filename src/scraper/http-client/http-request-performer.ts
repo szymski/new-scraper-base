@@ -4,6 +4,7 @@ import { HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType } fro
 export enum HttpRequestError {
   Timeout = "timeout",
   InvalidUrl = "invalid_url",
+  AddressNotFound = "address_not_found",
   Other = "other",
 }
 

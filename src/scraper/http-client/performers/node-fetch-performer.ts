@@ -7,6 +7,7 @@ import {
 } from "../http-request-performer";
 
 const TYPE_REQUEST_TIMEOUT = "request-timeout";
+const TYPE_SYSTEM = "system";
 
 export class NodeFetchPerformer implements HttpRequestPerformer {
   async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
@@ -45,6 +46,22 @@ export class NodeFetchPerformer implements HttpRequestPerformer {
             errorCode: HttpRequestError.Timeout,
             errorMessage: e.message,
           };
+        }
+        else if(e.type === TYPE_SYSTEM) {
+          if(e.code === "ENOTFOUND") {
+            return {
+              success: false,
+              errorCode: HttpRequestError.AddressNotFound,
+              errorMessage: e.message,
+            };
+          }
+          else {
+            return {
+              success: false,
+              errorCode: HttpRequestError.Other,
+              errorMessage: e.message,
+            };
+          }
         }
         console.log("Type:", e.type);
       } else if (e instanceof TypeError) {
