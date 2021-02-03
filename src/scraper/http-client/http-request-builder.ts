@@ -1,7 +1,13 @@
 import Cheerio from "cheerio";
+import { HttpException, HttpInvalidUrlException, HttpTimeoutException } from "./exceptions";
 import { HttpClient, HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType } from "./http-client";
 import { HttpClientConfig } from "./http-client-config";
-import { HttpRequestPerformInput, HttpRequestPerformOutput } from "./http-request-performer";
+import {
+  HttpRequestError,
+  HttpRequestPerformInput,
+  HttpRequestPerformOutput,
+  HttpRequestPerformOutputSuccess,
+} from "./http-request-performer";
 import { InterceptorLike, RequestInterceptorLike, ResponseInterceptorLike } from "./interceptors/interfaces";
 import { HttpRequestAdd } from "./interfaces";
 import CheerioAPI = cheerio.CheerioAPI;
@@ -94,50 +100,51 @@ export class HttpRequestBuilder {
     text: (): Promise<HttpResponse<string>> => {
       return this.getPerformInput("text")
         .then((input) => this.performAndIntercept(input))
-        .then((res) => ({
-          status: res.statusCode,
-          headers: res.headers,
-          data: res.data,
-        }));
+        .then((out) => this.processOutput(out, (res) => res.data));
     },
     json: <T = any>(): Promise<HttpResponse<T>> => {
       this.add.header("Accept", "application/json; utf-8");
       return this.getPerformInput("text")
         .then((input) => this.performAndIntercept(input))
-        .then((res) => ({
-          status: res.statusCode,
-          headers: res.headers,
-          data: JSON.parse(res.data),
-        }));
+        .then((out) => this.processOutput(out, (res) => JSON.parse(res.data)));
     },
     cheerio: (): Promise<HttpResponse<CheerioAPI | Root>> => {
       return this.getPerformInput("text")
         .then((input) => this.performAndIntercept(input))
-        .then((res) => ({
-          status: res.statusCode,
-          headers: res.headers,
-          data: Cheerio.load(res.data),
-        }));
+        .then((out) => this.processOutput(out, (res) => Cheerio.load(res.data)));
     },
     buffer: (): Promise<HttpResponse<Buffer>> => {
-      return this.getPerformInput("buffer")
+      return this.getPerformInput("text")
         .then((input) => this.performAndIntercept(input))
-        .then((res) => ({
-          status: res.statusCode,
-          headers: res.headers,
-          data: res.data,
-        }));
+        .then((out) => this.processOutput(out, (res) => res.data));
     },
     void: (): Promise<HttpResponse<void>> => {
-      return this.getPerformInput("void")
+      return this.getPerformInput("text")
         .then((input) => this.performAndIntercept(input))
-        .then((res) => ({
-          status: res.statusCode,
-          headers: res.headers,
-          data: undefined,
-        }));
+        .then((out) => this.processOutput(out, (res) => undefined));
     },
   };
+
+  private async processOutput<T>(
+    output: HttpRequestPerformOutput,
+    getDataCallback: (res: HttpRequestPerformOutputSuccess) => T
+  ): Promise<HttpResponse<T>> {
+    if (output.success) {
+      return {
+        status: output.statusCode,
+        headers: output.headers,
+        data: await getDataCallback(output),
+      };
+    } else {
+      if (output.errorCode === HttpRequestError.Timeout) {
+        throw new HttpTimeoutException(output.errorMessage);
+      } else if (output.errorCode === HttpRequestError.InvalidUrl) {
+        throw new HttpInvalidUrlException(output.errorMessage);
+      } else {
+        throw new HttpException(output.errorMessage);
+      }
+    }
+  }
 
   readonly add: HttpRequestAdd<HttpRequestBuilder> = {
     urlParam: (key, value) => {

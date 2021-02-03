@@ -1,11 +1,18 @@
-import {HttpClient} from "../http-client";
-import {HttpRequestPerformer, HttpRequestPerformInput, HttpRequestPerformOutput} from "../http-request-performer";
+import { HttpClient } from "../http-client";
+import {
+  HttpRequestError,
+  HttpRequestPerformer,
+  HttpRequestPerformInput,
+  HttpRequestPerformOutput,
+} from "../http-request-performer";
+import {HttpInvalidUrlException, HttpTimeoutException} from "../exceptions";
 
 describe("HttpRequestBuilder", () => {
   const mockPerformer = (data?: any): HttpRequestPerformer => {
     return {
       async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
         return {
+          success: true,
           data,
           headers: {},
           statusCode: 0,
@@ -70,9 +77,7 @@ describe("HttpRequestBuilder", () => {
 
       const client = new HttpClient(performer);
 
-      await client.post("some_url")
-        .add.body("this is the body")
-        .text();
+      await client.post("some_url").add.body("this is the body").text();
 
       expect(performerSpy).toBeCalledWith({
         method: "post",
@@ -91,15 +96,13 @@ describe("HttpRequestBuilder", () => {
 
       const client = new HttpClient(performer);
 
-      await client.put("some_url")
-        .add.jsonBody({key: "value"})
-        .text();
+      await client.put("some_url").add.jsonBody({ key: "value" }).text();
 
       expect(performerSpy).toBeCalledWith({
         method: "put",
         url: "some_url",
         bodyType: "text",
-        body: JSON.stringify({key: "value"}),
+        body: JSON.stringify({ key: "value" }),
         headers: expect.objectContaining({
           "Content-Type": "application/json; utf-8",
         }),
@@ -114,8 +117,7 @@ describe("HttpRequestBuilder", () => {
 
       const client = new HttpClient(performer);
 
-      await client.patch("some_url")
-        .json();
+      await client.patch("some_url").json();
 
       expect(performerSpy).toBeCalledWith({
         method: "patch",
@@ -123,7 +125,7 @@ describe("HttpRequestBuilder", () => {
         bodyType: "null",
         body: null,
         headers: expect.objectContaining({
-          "Accept": "application/json; utf-8",
+          Accept: "application/json; utf-8",
         }),
         cookies: expect.anything(),
         responseType: "text",
@@ -136,8 +138,7 @@ describe("HttpRequestBuilder", () => {
 
       const client = new HttpClient(performer);
 
-      await client.delete("some_url")
-        .void();
+      await client.delete("some_url").void();
 
       expect(performerSpy).toBeCalledWith({
         method: "delete",
@@ -163,86 +164,89 @@ describe("HttpRequestBuilder", () => {
       test("Should keep empty url", async () => {
         client.config.baseUrl = "";
         await client.get("").void();
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "",
-          }));
+          })
+        );
       });
 
       test("Should not add base url if request url already has it", async () => {
         client.config.baseUrl = "http://test.com";
         await client.get("http://asd.com").void();
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://asd.com",
-          }));
+          })
+        );
 
         client.config.baseUrl = "http://test.com";
         await client.get("https://asd.com").void();
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "https://asd.com",
-          }));
+          })
+        );
       });
 
       test("Should add slash to base url if missing", async () => {
         client.config.baseUrl = "http://test.com";
         await client.get("asd").void();
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://test.com/asd",
-          }));
+          })
+        );
 
         client.config.baseUrl = "http://test.com/";
         await client.get("asd2").void();
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://test.com/asd2",
-          }));
+          })
+        );
 
         client.config.baseUrl = "http://test.com/";
         await client.get("/asd3").void();
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://test.com/asd3",
-          }));
+          })
+        );
       });
 
       test("Should add question mark if missing and params are included", async () => {
-        await client.get("http://test.com")
-          .void();
+        await client.get("http://test.com").void();
 
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://test.com",
-          }));
+          })
+        );
 
-        await client.get("http://test.com")
-          .add.urlParam("param1", "value")
-          .void();
+        await client.get("http://test.com").add.urlParam("param1", "value").void();
 
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://test.com/?param1=value",
-          }));
+          })
+        );
 
-        await client.get("http://test.com/")
-          .add.urlParam("param1", "value")
-          .void();
+        await client.get("http://test.com/").add.urlParam("param1", "value").void();
 
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://test.com/?param1=value",
-          }));
+          })
+        );
 
-        await client.get("http://test.com/?")
-          .add.urlParam("param1", "value")
-          .void();
+        await client.get("http://test.com/?").add.urlParam("param1", "value").void();
 
-        expect(spy)
-          .toBeCalledWith(expect.objectContaining({
+        expect(spy).toBeCalledWith(
+          expect.objectContaining({
             url: "http://test.com/?param1=value",
-          }));
+          })
+        );
       });
     });
   });
@@ -253,8 +257,7 @@ describe("HttpRequestBuilder", () => {
       const performerSpy = jest.spyOn(performer, "perform");
 
       const client = new HttpClient(performer);
-      client.config
-        .add.requestInterceptor(async (input) => {
+      client.config.add.requestInterceptor(async (input) => {
         input.body = "intercepted";
         return input;
       });
@@ -267,30 +270,71 @@ describe("HttpRequestBuilder", () => {
         })
         .text();
 
-      expect(performerSpy).toBeCalledWith(expect.objectContaining({
-        body: "intercepted123",
-      }));
+      expect(performerSpy).toBeCalledWith(
+        expect.objectContaining({
+          body: "intercepted123",
+        })
+      );
     });
 
     test("Should run response interceptors", async () => {
       const performer = mockPerformer("original");
 
       const client = new HttpClient(performer);
-      client.config
-        .add.responseInterceptor(async (output, config) => {
-        output.data += "1";
+      client.config.add.responseInterceptor(async (output, config) => {
+        if (output.success) output.data += "1";
         return output;
       });
 
       const res = await client
         .get("some_url")
         .add.responseInterceptor(async (output, config) => {
-          output.data += "2";
+          if (output.success) output.data += "2";
           return output;
         })
         .text();
 
       expect(res).toEqual("original12");
+    });
+  });
+
+  describe("Exception handling", () => {
+    test("Should throw timeout exception when performer times out", async () => {
+      const performer: HttpRequestPerformer = {
+        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+          return {
+            success: false,
+            errorCode: HttpRequestError.Timeout,
+          };
+        },
+      };
+
+      const client = new HttpClient(performer);
+
+      const t = () => client.get("test").void();
+
+      await expect(t())
+        .rejects
+        .toThrow(HttpTimeoutException);
+    });
+
+    test("Should throw invalid url exception", async () => {
+      const performer: HttpRequestPerformer = {
+        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+          return {
+            success: false,
+            errorCode: HttpRequestError.InvalidUrl,
+          };
+        },
+      };
+
+      const client = new HttpClient(performer);
+
+      const t = () => client.get("test").void();
+
+      await expect(t())
+        .rejects
+        .toThrow(HttpInvalidUrlException);
     });
   });
 });
