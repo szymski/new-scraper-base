@@ -1,6 +1,7 @@
 import Cheerio from "cheerio";
 import {
   HttpAddressNotFoundException,
+  HttpBuilderAlreadyUsed,
   HttpException,
   HttpForbiddenException,
   HttpInvalidUrlException,
@@ -65,6 +66,10 @@ export class HttpRequestBuilder {
     value: null,
   };
 
+  #context: Record<string, any> = {};
+
+  #used = false;
+
   constructor(
     private readonly client: HttpClient,
     private readonly method: HttpMethod,
@@ -106,32 +111,48 @@ export class HttpRequestBuilder {
 
   readonly withHeaders = {
     text: (): Promise<HttpResponse<string>> => {
-      return this.getPerformInput("text")
-        .then((input) => this.performAndIntercept(input))
-        .then((out) => this.processOutput(out, (res) => res.data));
+      return this.runRetryingRequest("text", (res) => res.data);
     },
     json: <T = any>(): Promise<HttpResponse<T>> => {
       this.add.header("Accept", "application/json; utf-8");
-      return this.getPerformInput("text")
-        .then((input) => this.performAndIntercept(input))
-        .then((out) => this.processOutput(out, (res) => JSON.parse(res.data)));
+      return this.runRetryingRequest("text", (res) => JSON.parse(res.data));
     },
     cheerio: (): Promise<HttpResponse<CheerioAPI | Root>> => {
-      return this.getPerformInput("text")
-        .then((input) => this.performAndIntercept(input))
-        .then((out) => this.processOutput(out, (res) => Cheerio.load(res.data)));
+      return this.runRetryingRequest("text", (res) => Cheerio.load(res.data));
     },
     buffer: (): Promise<HttpResponse<Buffer>> => {
-      return this.getPerformInput("text")
-        .then((input) => this.performAndIntercept(input))
-        .then((out) => this.processOutput(out, (res) => res.data));
+      return this.runRetryingRequest("buffer", (res) => res.data);
     },
     void: (): Promise<HttpResponse<void>> => {
-      return this.getPerformInput("void")
-        .then((input) => this.performAndIntercept(input))
-        .then((out) => this.processOutput(out, (res) => undefined));
+      return this.runRetryingRequest("void", (res) => undefined);
     },
   };
+
+  /**
+   * Runs performing in an infinite loop, unless output retry is false.
+   */
+  private async runRetryingRequest<T>(
+    responseType: HttpRequestPerformerResponseType,
+    getDataCallback: (res: HttpRequestPerformOutputSuccess) => any
+  ): Promise<HttpResponse<T>> {
+    if (this.#used) {
+      throw new HttpBuilderAlreadyUsed();
+    }
+
+    this.#used = true;
+
+    while (true) {
+      const input = await this.getPerformInput(responseType);
+      const output = await this.performAndIntercept(input);
+
+      if (output.retry) {
+        continue;
+      }
+
+      const response = await this.processOutput(output, getDataCallback);
+      return response;
+    }
+  }
 
   private async processOutput<T>(
     output: HttpRequestPerformOutput,
@@ -161,6 +182,8 @@ export class HttpRequestBuilder {
       }
       if (output.errorCode === HttpRequestError.AddressNotFound) {
         throw new HttpAddressNotFoundException(output.errorMessage);
+      } else if (output.errorCode === HttpRequestError.PurposefulInterruption) {
+        throw new HttpException("Request interrupted on purpose");
       } else {
         throw new HttpException(output.errorMessage);
       }
@@ -236,7 +259,7 @@ export class HttpRequestBuilder {
     };
 
     for (const interceptor of this.#config.interceptors.request) {
-      input = <any>await interceptor(input, this.#config) ?? input;
+      input = <any>await interceptor(input, this.#config, this.#context) ?? input;
     }
 
     return input;
@@ -274,7 +297,7 @@ export class HttpRequestBuilder {
     let response = await this.perform(input);
 
     for (const interceptor of this.#config.interceptors.response) {
-      response = <any>await interceptor(response, this.#config) ?? response;
+      response = <any>await interceptor(response, this.#config, this.#context) ?? response;
     }
 
     return response;

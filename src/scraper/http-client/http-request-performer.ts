@@ -5,6 +5,7 @@ export enum HttpRequestError {
   Timeout = "timeout",
   InvalidUrl = "invalid_url",
   AddressNotFound = "address_not_found",
+  PurposefulInterruption = "purposeful_interruption",
   Other = "other",
 }
 
@@ -26,6 +27,7 @@ export interface HttpRequestPerformOutputFail {
   success: false;
   errorCode: HttpRequestError;
   errorMessage?: string;
+  retry?: boolean;
 }
 
 export interface HttpRequestPerformOutputSuccess {
@@ -33,6 +35,7 @@ export interface HttpRequestPerformOutputSuccess {
   statusCode: number;
   headers: Record<string, string>;
   data: any;
+  retry?: boolean;
 }
 
 export type HttpRequestPerformOutput = HttpRequestPerformOutputFail | HttpRequestPerformOutputSuccess;

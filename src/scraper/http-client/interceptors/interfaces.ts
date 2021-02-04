@@ -1,5 +1,5 @@
-import {HttpRequestPerformInput, HttpRequestPerformOutput} from "../http-request-performer";
-import {HttpClientConfig} from "../http-client-config";
+import { HttpClientConfig } from "../http-client-config";
+import { HttpRequestPerformInput, HttpRequestPerformOutput } from "../http-request-performer";
 
 export type RequestInterceptorLike = RequestInterceptor | RequestInterceptorFunction;
 export type ResponseInterceptorLike = ResponseInterceptor | ResponseInterceptorFunction;
@@ -12,6 +12,17 @@ export interface RequestInterceptor {
 export interface ResponseInterceptor {
   interceptResponse: ResponseInterceptorFunction;
 }
-export type RequestInterceptorFunction = (input: HttpRequestPerformInput, config: HttpClientConfig) => Promise<HttpRequestPerformInput | undefined | void>;
 
-export type ResponseInterceptorFunction = (input: HttpRequestPerformOutput, config: HttpClientConfig) => Promise<HttpRequestPerformOutput | undefined | void>;
+export type RequestContext = Record<string, any>;
+
+export type RequestInterceptorFunction = (
+  input: HttpRequestPerformInput,
+  config: HttpClientConfig,
+  context: RequestContext
+) => Promise<HttpRequestPerformInput | undefined | void>;
+
+export type ResponseInterceptorFunction = (
+  output: HttpRequestPerformOutput,
+  config: HttpClientConfig,
+  context: RequestContext
+) => Promise<HttpRequestPerformOutput | undefined | void>;

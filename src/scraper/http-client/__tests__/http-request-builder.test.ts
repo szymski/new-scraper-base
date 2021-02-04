@@ -3,7 +3,8 @@ import {
   HttpForbiddenException,
   HttpInvalidUrlException,
   HttpNotFoundException,
-  HttpTimeoutException, HttpUnauthorizedException,
+  HttpTimeoutException,
+  HttpUnauthorizedException,
 } from "../exceptions";
 import { HttpClient } from "../http-client";
 import {
@@ -12,6 +13,7 @@ import {
   HttpRequestPerformInput,
   HttpRequestPerformOutput,
 } from "../http-request-performer";
+import { ResponseInterceptorFunction } from "../interceptors/interfaces";
 
 describe("HttpRequestBuilder", () => {
   const mockPerformer = (data?: any): HttpRequestPerformer => {
@@ -302,6 +304,29 @@ describe("HttpRequestBuilder", () => {
 
       expect(res).toEqual("original12");
     });
+
+    test("Should pass request context to response interceptor", async () => {
+      const performer = mockPerformer("original");
+
+      const client = new HttpClient(performer);
+      client.config.add.requestInterceptor(async (input, config, context) => {
+        context["some_data"] = "from_request";
+      });
+
+      const res = await client
+        .get("some_url")
+        .add.responseInterceptor(async (output, config, context) => {
+          return {
+            success: true,
+            statusCode: 200,
+            headers: {},
+            data: context["some_data"],
+          };
+        })
+        .text();
+
+      expect(res).toEqual("from_request");
+    });
   });
 
   describe("Exception handling", () => {
@@ -411,6 +436,40 @@ describe("HttpRequestBuilder", () => {
       const t = () => client.get("test").void();
 
       await expect(t()).rejects.toThrow(HttpUnauthorizedException);
+    });
+  });
+
+  describe("Request performing", () => {
+    test("Should run the request again if retry was set to true", async () => {
+      let runs = 0;
+
+      const performer: HttpRequestPerformer = {
+        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+          runs++;
+          return runs == 1
+            ? {
+                success: false,
+                errorCode: HttpRequestError.Other,
+              }
+            : {
+                success: true,
+                statusCode: 200,
+                headers: {},
+                data: "data",
+              };
+        },
+      };
+
+      const responseInterceptor: ResponseInterceptorFunction = async (output, config, context) => {
+        output.retry = runs <= 1;
+      };
+
+      const client = new HttpClient(performer);
+      client.config.add.responseInterceptor(responseInterceptor);
+
+      await client.get("asd").void();
+
+      expect(runs).toEqual(2);
     });
   });
 });

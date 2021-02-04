@@ -6,6 +6,12 @@ export class HttpException extends Error {
   }
 }
 
+export class HttpBuilderAlreadyUsed extends HttpException {
+  constructor() {
+    super("This HTTP request builder has already been used");
+  }
+}
+
 export class HttpResponseException extends Error {
   constructor(message?: string) {
     super(message ?? "Unknown error");
