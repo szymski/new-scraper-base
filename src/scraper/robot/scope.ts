@@ -8,11 +8,16 @@ import {
   ScopeMetadata,
   ScopeParamMetadata,
 } from "./metadata-helpers";
+import { Robot } from "./robot";
 
-interface ScopeContext {
+export interface ScopeContext {
   parent: ScopeContext | null;
   name: string;
   executionName: string;
+  startDate: Date;
+  endDate?: Date;
+  totalDuration?: number;
+  robot: Robot;
 }
 
 const scopeStorage = new AsyncLocalStorage<ScopeContext>();
@@ -25,19 +30,38 @@ export function getCurrentScope(): ScopeContext {
   return scope;
 }
 
+export function getCurrentScopeNoFail(): ScopeContext | null {
+  return scopeStorage.getStore() ?? null;
+}
+
 export function wrapWithScope<T extends (...params: any[]) => any>(
   callback: T,
   name: string,
   paramsMetadata: ScopeParamMetadata[]
 ) {
-  return function (this: any, ...params: any[]) {
-    const newScope = inheritScope(
+  return function (this: Robot, ...params: any[]) {
+    const scope = inheritScope(
       getCurrentScope(),
       name,
       formatScopeParams(params, paramsMetadata)
     );
-    return scopeStorage.run(newScope, () => {
-      return callback.apply(this, params);
+    return scopeStorage.run(scope, () => {
+      this.onScopeStart(scope);
+      return (
+        callback
+          .apply(this, params)
+          // .catch((e: any) => {
+          //   Logger.error(e);
+          //   throw e;
+          // })
+          .then((result: any) => {
+            scope.endDate = new Date();
+            scope.totalDuration =
+              scope.endDate.getTime() - scope.startDate.getTime();
+            this.onScopeEnd(scope);
+            return result;
+          })
+      );
     });
   };
 }
@@ -48,11 +72,13 @@ export function wrapWithInitialScope<T extends (...params: any[]) => any>(
   return scopeStorage.run(initRootScope(), fn);
 }
 
-export function initRootScope(name?: string): ScopeContext {
+export function initRootScope(name?: string, robot?: Robot): ScopeContext {
   return {
     parent: null,
     name: name ?? "ROOT",
     executionName: name ?? "ROOT",
+    startDate: new Date(),
+    robot: robot!,
   };
 }
 
@@ -65,6 +91,8 @@ function inheritScope(
     parent,
     name: `${parent.name}.${name}`,
     executionName: `${parent.executionName}.${name}(${formattedParams})`,
+    startDate: new Date(),
+    robot: parent.robot,
   };
 }
 

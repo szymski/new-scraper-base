@@ -17,6 +17,7 @@ The framework currently includes:
         - Be notified which items create most errors
         - Logs will be enhanced with current execution scope
     - Data streaming
+    - Support for different actions (entrypoints)
 
 ### Plans
 Features I am planning to add:
