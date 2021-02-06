@@ -11,12 +11,16 @@ import {
 import { Robot } from "./robot";
 
 export interface ScopeContext {
+  root: ScopeContext;
   parent: ScopeContext | null;
   name: string;
   executionName: string;
   startDate: Date;
   endDate?: Date;
   totalDuration?: number;
+}
+
+export interface RootScopeContext extends ScopeContext {
   robot: Robot;
 }
 
@@ -69,19 +73,25 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
 
 export function runWithInitialScope<T extends (...params: any[]) => any>(
   fn: T,
-  scope?: Partial<ScopeContext>
+  scope?: Partial<RootScopeContext>
 ): ReturnType<T> {
   return scopeStorage.run(prepareInitialScope(scope ?? {}), fn);
 }
 
-function prepareInitialScope(scope: Partial<ScopeContext>): ScopeContext {
-  return {
+function prepareInitialScope(
+  data: Partial<RootScopeContext>
+): RootScopeContext {
+  const scope: RootScopeContext = {
     parent: null,
-    name: scope.name ?? "ROOT",
-    executionName: scope.name ?? "ROOT",
-    robot: scope.robot!,
+    root: null!,
+    name: data.name ?? "ROOT",
+    executionName: data.name ?? "ROOT",
+    robot: data.robot!,
     startDate: new Date(),
   };
+  scope.root = scope;
+  scope.parent = scope;
+  return scope;
 }
 
 function inheritScope(
@@ -90,11 +100,11 @@ function inheritScope(
   formattedParams: string
 ): ScopeContext {
   return {
+    root: parent.root,
     parent,
     name: `${parent.name}.${name}`,
     executionName: `${parent.executionName}.${name}(${formattedParams})`,
     startDate: new Date(),
-    robot: parent.robot,
   };
 }
 
