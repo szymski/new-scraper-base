@@ -34,19 +34,19 @@ export function getCurrentScopeNoFail(): ScopeContext | null {
   return scopeStorage.getStore() ?? null;
 }
 
-export function wrapWithScope<T extends (...params: any[]) => any>(
+export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
   callback: T,
   name: string,
-  paramsMetadata: ScopeParamMetadata[]
+  paramsMetadata: ScopeParamMetadata[] = []
 ) {
-  return function (this: Robot, ...params: any[]) {
+  return function (this: any, ...params: any[]) {
     const scope = inheritScope(
       getCurrentScope(),
       name,
       formatScopeParams(params, paramsMetadata)
     );
     return scopeStorage.run(scope, () => {
-      this.onScopeStart(scope);
+      this?.onScopeStart(scope);
       return (
         callback
           .apply(this, params)
@@ -58,7 +58,7 @@ export function wrapWithScope<T extends (...params: any[]) => any>(
             scope.endDate = new Date();
             scope.totalDuration =
               scope.endDate.getTime() - scope.startDate.getTime();
-            this.onScopeEnd(scope);
+            this?.onScopeEnd(scope);
             return result;
           })
       );
@@ -66,19 +66,20 @@ export function wrapWithScope<T extends (...params: any[]) => any>(
   };
 }
 
-export function wrapWithInitialScope<T extends (...params: any[]) => any>(
-  fn: T
-) {
-  return scopeStorage.run(initRootScope(), fn);
+export function runWithInitialScope<T extends (...params: any[]) => any>(
+  fn: T,
+  scope?: Partial<ScopeContext>
+): ReturnType<T> {
+  return scopeStorage.run(prepareInitialScope(scope ?? {}), fn);
 }
 
-export function initRootScope(name?: string, robot?: Robot): ScopeContext {
+function prepareInitialScope(scope: Partial<ScopeContext>): ScopeContext {
   return {
     parent: null,
-    name: name ?? "ROOT",
-    executionName: name ?? "ROOT",
+    name: scope.name ?? "ROOT",
+    executionName: scope.name ?? "ROOT",
+    robot: scope.robot!,
     startDate: new Date(),
-    robot: robot!,
   };
 }
 
@@ -126,7 +127,7 @@ export function Scope(name?: string) {
   };
 }
 
-// TODO: Get the name automatically. I used to wonder why libraries often don't do that. Now I understand why.
+// TODO: Get the param name automatically. I used to wonder why libraries often don't do that. Now I understand why.
 export function ScopeParam(name: string) {
   return function (
     target: Object,
