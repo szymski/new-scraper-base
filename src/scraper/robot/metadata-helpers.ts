@@ -34,6 +34,7 @@ export function formatScopeParams(
   paramsMetadata: ScopeParamMetadata[]
 ) {
   return paramsMetadata
+    .sort((a, b) => a.index - b.index > 0 ? 1 : -1)
     .map((meta) => `${meta.name}=${JSON.stringify(params[meta.index])}`)
     .join(",");
 }

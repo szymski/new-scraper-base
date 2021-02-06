@@ -46,7 +46,8 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       formatScopeParams(params, paramsMetadata)
     );
     return scopeStorage.run(scope, () => {
-      this?.onScopeStart(scope);
+      // TODO: Hooks
+      // this?.onScopeStart(scope);
       return (
         callback
           .apply(this, params)
@@ -58,7 +59,7 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
             scope.endDate = new Date();
             scope.totalDuration =
               scope.endDate.getTime() - scope.startDate.getTime();
-            this?.onScopeEnd(scope);
+            // this?.onScopeEnd(scope);
             return result;
           })
       );

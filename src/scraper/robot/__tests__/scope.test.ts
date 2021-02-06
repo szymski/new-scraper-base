@@ -1,4 +1,10 @@
-import { getCurrentScope, runWithInitialScope, wrapWithScope } from "../scope";
+import {
+  getCurrentScope,
+  runWithInitialScope,
+  Scope,
+  ScopeParam,
+  wrapWithScope,
+} from "../scope";
 
 describe("Scope tests", () => {
   const nextTick = () => new Promise((resolve) => process.nextTick(resolve));
@@ -73,6 +79,32 @@ describe("Scope tests", () => {
           "ROOT.F1",
           "ROOT.F3.F2",
         ]);
+      },
+      {
+        name: "ROOT",
+      }
+    );
+  });
+
+  test("Should format execution name using parameters", async () => {
+    const scopeNames: string[] = [];
+
+    class Robot {
+      @Scope()
+      async fn(
+        @ScopeParam("param1") param1: number,
+        @ScopeParam("param2") param2: string
+      ) {
+        scopeNames.push(getCurrentScope().executionName);
+      }
+    }
+
+    const robot = new Robot();
+
+    await runWithInitialScope(
+      async () => {
+        await robot.fn(123, "str");
+        expect(scopeNames).toEqual([`ROOT.fn(param1=123,param2="str")`]);
       },
       {
         name: "ROOT",
