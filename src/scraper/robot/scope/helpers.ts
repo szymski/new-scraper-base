@@ -1,7 +1,17 @@
 import "reflect-metadata";
-import { formatScopeParams, ScopeParamMetadata } from "../metadata-helpers";
+import { ScopeParamMetadata } from "../metadata-helpers";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
 import { RootScopeContext, ScopeContext } from "./types";
+
+export function formatScopeParams(
+  params: any[],
+  paramsMetadata: ScopeParamMetadata[]
+) {
+  return paramsMetadata
+    .sort((a, b) => (a.index - b.index > 0 ? 1 : -1))
+    .map((meta) => `${meta.name}=${JSON.stringify(params[meta.index])}`)
+    .join(",");
+}
 
 export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
   callback: T,

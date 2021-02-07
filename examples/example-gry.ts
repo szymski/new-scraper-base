@@ -1,9 +1,10 @@
 import "reflect-metadata";
-import { HttpClient } from "./scraper/http-client/http-client";
-import { NodeFetchPerformer } from "./scraper/http-client/performers/node-fetch-performer";
-import { Entrypoint, Robot } from "./scraper/robot/robot";
-import { Scope, ScopeParam } from "./scraper/robot/scope";
-import { Logger } from "./scraper/util/logger";
+import { HttpClient } from "../src/scraper/http-client/http-client";
+import { NodeFetchPerformer } from "../src/scraper/http-client/performers/node-fetch-performer";
+import { Entrypoint } from "../src/scraper/robot/entrypoint";
+import { Robot } from "../src/scraper/robot/robot";
+import { Scope, ScopeParam } from "../src/scraper/robot/scope";
+import { Logger } from "../src/scraper/util/logger";
 
 interface GameData {
   name: string;

@@ -1,26 +1,7 @@
-import { Logger } from "../util/logger";
+import { createEntrypointRun } from "./entrypoint";
 import { getCurrentScope } from "./scope";
-import { runWithInitialScope } from "./scope/helpers";
-import { RootScopeContext, ScopeContext } from "./scope/types";
-
-interface RobotRun<TData, TReturn> {
-  callbacks: {
-    onDataReceived(output: OutputTypeUnion<TData>): void;
-  };
-
-  start(): Promise<TReturn>;
-}
-
-type OutputType<TName, TData> = {
-  type: TName;
-  data: TData;
-};
-
-type TemporaryOutputMap<TDataMap> = {
-  [K in keyof TDataMap as K]: OutputType<K, TDataMap[K]>;
-};
-
-type OutputTypeUnion<TDataMap> = TemporaryOutputMap<TDataMap>[keyof TDataMap];
+import { ScopeContext } from "./scope/types";
+import { RobotRun } from "./types";
 
 export class Robot {
   onScopeStart(scope: ScopeContext) {}
@@ -30,46 +11,10 @@ export class Robot {
   entrypoint<TData, TReturn = any>(
     fn: () => Promise<TReturn>
   ): RobotRun<TData, TReturn> {
-    let run: RobotRun<TData, TReturn>;
-
-    Logger.verbose(`Initialized entrypoint`);
-
-    const scope: Partial<RootScopeContext> = {
-      // TODO: Get name from entrypoint name
-      robot: this,
-      callbacks: {
-        onDataReceived(type: string, data: any) {
-          run.callbacks.onDataReceived({
-            type,
-            data,
-          } as OutputTypeUnion<TData>);
-        },
-      },
-    };
-
-    const start = async () => {
-      Logger.verbose("Running entrypoint");
-      const result = await runWithInitialScope(fn, scope);
-      Logger.verbose("Robot action finished");
-      return result;
-    };
-
-    run = {
-      start,
-      callbacks: {
-        onDataReceived(data: OutputTypeUnion<TData>) {},
-      },
-    };
-
-    return run;
+    return createEntrypointRun<TData, TReturn>(this, fn);
   }
 
   protected onDataReceived(type: string, data: any) {
     getCurrentScope().root.callbacks.onDataReceived(type, data);
   }
-}
-
-// TODO
-export function Entrypoint(name?: string): MethodDecorator {
-  return (target, propertyKey, descriptor) => {};
 }

@@ -1,3 +1,4 @@
+import { Logger } from "../../util/logger";
 import { HttpRequestError } from "../http-request-performer";
 import { RequestInterceptor, ResponseInterceptor } from "./interfaces";
 
@@ -9,12 +10,15 @@ const RETRIES_CONTEXT = "retries";
  * @param retryCount How many times should it retry
  * @param sleepMs Sleep period in milliseconds
  */
-export const retryInterceptor = (retryCount: number, sleepMs: number = 0): ResponseInterceptor & RequestInterceptor => {
+export const retryInterceptor = (
+  retryCount: number,
+  sleepMs: number = 0
+): ResponseInterceptor & RequestInterceptor => {
   return {
     interceptRequest: async (input, config, context) => {
       const retries: number = context[RETRIES_CONTEXT] ?? 0;
       if (retries > 0 && sleepMs > 0) {
-        console.log(`Sleeping for: ${sleepMs}ms`);
+        Logger.verbose(`Sleeping for: ${sleepMs}ms`);
         await sleep(sleepMs);
       }
     },
@@ -26,7 +30,7 @@ export const retryInterceptor = (retryCount: number, sleepMs: number = 0): Respo
       const retries: number = context[RETRIES_CONTEXT] ?? 0;
       if (retries < retryCount) {
         context[RETRIES_CONTEXT] = retries + 1;
-        console.log(`Retries: ${retries}/${retryCount}`);
+        Logger.verbose(`Retries: ${retries}/${retryCount}`);
         return {
           success: false,
           errorCode: HttpRequestError.Other,
