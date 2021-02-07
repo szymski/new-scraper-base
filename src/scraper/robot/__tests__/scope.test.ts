@@ -1,10 +1,5 @@
-import {
-  getCurrentScope,
-  runWithInitialScope,
-  Scope,
-  ScopeParam,
-  wrapWithScope,
-} from "../scope";
+import { getCurrentScope, Scope, ScopeParam } from "../scope";
+import { runWithInitialScope, wrapWithScope } from "../scope/helpers";
 
 describe("Scope tests", () => {
   const nextTick = () => new Promise((resolve) => process.nextTick(resolve));

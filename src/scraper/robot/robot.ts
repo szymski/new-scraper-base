@@ -1,10 +1,7 @@
 import { Logger } from "../util/logger";
-import {
-  getCurrentScope,
-  RootScopeContext,
-  runWithInitialScope,
-  ScopeContext,
-} from "./scope";
+import { getCurrentScope } from "./scope";
+import { runWithInitialScope } from "./scope/helpers";
+import { RootScopeContext, ScopeContext } from "./scope/types";
 
 interface RobotRun<TData, TReturn> {
   callbacks: {
@@ -13,8 +10,6 @@ interface RobotRun<TData, TReturn> {
 
   start(): Promise<TReturn>;
 }
-
-////////////////////
 
 type OutputType<TName, TData> = {
   type: TName;
@@ -74,6 +69,7 @@ export class Robot {
   }
 }
 
+// TODO
 export function Entrypoint(name?: string): MethodDecorator {
   return (target, propertyKey, descriptor) => {};
 }
