@@ -4,6 +4,7 @@ import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/types";
 import { OutputTypeUnion, RobotRun } from "./types";
+import {addClassMetadata, ClassMetadataKeys, EntrypointMetadata} from "./metadata-helpers";
 
 interface EntrypointContext {
   name: string;
@@ -16,6 +17,11 @@ export function Entrypoint(name?: string): MethodDecorator {
     const context: EntrypointContext = {
       name: name ?? propertyKey.toString(),
     };
+    const metadata: EntrypointMetadata = {
+      name: name ?? propertyKey.toString(),
+      methodName: propertyKey.toString(),
+    };
+    addClassMetadata(target, ClassMetadataKeys.EntrypointMethods, metadata);
 
     const original: any = descriptor.value;
 

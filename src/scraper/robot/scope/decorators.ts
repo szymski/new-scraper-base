@@ -1,4 +1,5 @@
 import {
+  addClassMetadata,
   ClassMetadataKeys,
   getScopeParams,
   MethodMetadataKeys,
@@ -13,15 +14,11 @@ export function Scope(name?: string): MethodDecorator {
 
     const metadata: ScopeMetadata = {
       name: name ?? propertyKey,
+      methodName: propertyKey,
     };
-    const params: ScopeMetadata[] =
-      Reflect.getOwnMetadata(
-        ClassMetadataKeys.ScopeMethods,
-        target,
-        propertyKey
-      ) || [];
-    params.push(metadata);
-    Reflect.defineMetadata(ClassMetadataKeys.ScopeMethods, params, target);
+
+    addClassMetadata(target, ClassMetadataKeys.ScopeMethods, metadata);
+
     Reflect.defineMetadata(
       MethodMetadataKeys.Scope,
       metadata,

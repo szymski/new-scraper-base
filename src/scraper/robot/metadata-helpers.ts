@@ -1,5 +1,11 @@
 export interface ScopeMetadata {
   name: string;
+  methodName: string;
+}
+
+export interface EntrypointMetadata {
+  name: string;
+  methodName: string;
 }
 
 export interface ScopeParamMetadata {
@@ -9,6 +15,7 @@ export interface ScopeParamMetadata {
 
 export const ClassMetadataKeys = {
   ScopeMethods: Symbol("ScopeMethods"),
+  EntrypointMethods: Symbol("EntrypointMethods"),
 } as const;
 
 export const MethodMetadataKeys = {
@@ -27,4 +34,10 @@ export function getScopeParams(
   return (
     Reflect.getMetadata(MethodMetadataKeys.ScopeParam, target, methodName) || []
   );
+}
+
+export function addClassMetadata(target: any, key: symbol, value: any) {
+  const params: any[] = Reflect.getOwnMetadata(key, target) || [];
+  params.push(value);
+  Reflect.defineMetadata(key, params, target);
 }
