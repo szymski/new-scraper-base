@@ -11,7 +11,7 @@ import {
 import { Robot } from "./robot";
 
 export interface ScopeContext {
-  root: ScopeContext;
+  root: RootScopeContext;
   parent: ScopeContext | null;
   name: string;
   executionName: string;
@@ -22,6 +22,11 @@ export interface ScopeContext {
 
 export interface RootScopeContext extends ScopeContext {
   robot: Robot;
+  callbacks: ScopeCallbacks;
+}
+
+export interface ScopeCallbacks {
+  onDataReceived(type: string, data: any): void;
 }
 
 const scopeStorage = new AsyncLocalStorage<ScopeContext>();
@@ -44,8 +49,15 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
   paramsMetadata: ScopeParamMetadata[] = []
 ) {
   return function (this: any, ...params: any[]) {
+    const currentScope = getCurrentScopeNoFail();
+    if (!currentScope) {
+      throw new Error(
+        "Attempted to run scraper method without scope. You probably run a scraper method without an entrypoint. All scraping should start in a function marked with @Entrypoint()."
+      );
+    }
+
     const scope = inheritScope(
-      getCurrentScope(),
+      currentScope,
       name,
       formatScopeParams(params, paramsMetadata)
     );
@@ -88,6 +100,10 @@ function prepareInitialScope(
     executionName: data.name ?? "ROOT",
     robot: data.robot!,
     startDate: new Date(),
+    callbacks: {
+      onDataReceived(type: string, data: any) {},
+      ...(data.callbacks || {}),
+    },
   };
   scope.root = scope;
   scope.parent = scope;
