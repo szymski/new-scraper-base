@@ -1,5 +1,6 @@
 import async from "async";
 import ProgressBar from "progress";
+import { ProgressTracker } from "./progress-tracker";
 import { getCurrentScope } from "./scope";
 
 export class Parallel {
@@ -24,15 +25,20 @@ export class Parallel {
    */
   async forEach<T>(elements: T[], fn: (element: T) => void) {
     const scope = getCurrentScope();
-    const bar = Parallel.createBar(elements.length, scope.executionName);
-
+    const tracker = new ProgressTracker({
+      name: scope.executionName,
+      start: 0,
+      max: elements.length,
+    });
+    console.log(ProgressTracker.renderProgressbar(tracker));
     await async
       .eachLimit(elements, this.#taskLimit, async (item) => {
         await fn(item);
-        bar.tick();
+        tracker.increase();
+        console.log(ProgressTracker.renderProgressbar(tracker));
       })
       .finally(() => {
-        bar.terminate();
+        tracker.finish();
       });
   }
 
@@ -40,17 +46,23 @@ export class Parallel {
    * Parallelize actions performed in a for loop.
    * @param elements Sequence of elements
    * @param fn Function to run for each element
+   * @param start First value
+   * @param end Last value, exclusively
    */
   async for<T>(start: number, end: number, fn: (i: number) => void) {
     const scope = getCurrentScope();
-    const bar = Parallel.createBar(end - start, scope.executionName);
+    const tracker = new ProgressTracker({
+      name: scope.executionName,
+      start: start,
+      max: end,
+    });
     await async
       .timesLimit(end - start, this.#taskLimit, async (n) => {
         await fn(start + n);
-        bar.tick();
+        tracker.increase();
       })
       .finally(() => {
-        bar.terminate();
+        tracker.finish();
       });
   }
 

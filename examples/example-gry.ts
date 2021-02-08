@@ -40,8 +40,8 @@ class TestRobot extends Robot {
     // });
 
     await parallel()
-      .setLimit(10)
-      .for(1, 15, async (page) => {
+      .setLimit(1)
+      .for(1, 16, async (page) => {
         await this.scrapCategoryPage(url, page);
       });
 
