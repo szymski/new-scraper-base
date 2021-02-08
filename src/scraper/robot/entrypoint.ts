@@ -48,12 +48,12 @@ export function createEntrypointRun<TData, TReturn = any>(
   robot: Robot,
   fn: () => Promise<TReturn>
 ): RobotRun<TData, TReturn> {
+  const entrypointContext = getEntrypointContext();
+
   let run: RobotRun<TData, TReturn>;
 
-  Logger.verbose(`Initialized entrypoint`);
-
   const scope: Partial<RootScopeContext> = {
-    name: getEntrypointContext().name,
+    name: entrypointContext.name,
     robot: robot,
     callbacks: {
       onDataReceived(type: string, data: any) {
@@ -66,9 +66,9 @@ export function createEntrypointRun<TData, TReturn = any>(
   };
 
   const start = async () => {
-    Logger.verbose("Running entrypoint");
+    Logger.verbose(`Running entrypoint ${entrypointContext.name}`);
     const result = await runWithInitialScope(fn, scope);
-    Logger.verbose("Robot action finished");
+    Logger.verbose(`Robot action '${entrypointContext.name}' finished`);
     return result;
   };
 

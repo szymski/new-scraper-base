@@ -2,9 +2,9 @@ import "reflect-metadata";
 import { HttpClient } from "../src/scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../src/scraper/http-client/performers/node-fetch-performer";
 import { Entrypoint } from "../src/scraper/robot/entrypoint";
+import { parallel } from "../src/scraper/robot/parallel";
 import { Robot } from "../src/scraper/robot/robot";
 import { Scope, ScopeParam } from "../src/scraper/robot/scope";
-import { Logger } from "../src/scraper/util/logger";
 
 interface GameData {
   name: string;
@@ -27,19 +27,29 @@ class TestRobot extends Robot {
         .toArray()
         .map((x) => $(x).attr("href")!);
 
-      for (const url of categoryUrls) {
+      await parallel().forEach(categoryUrls, async (url) => {
         await this.scrapCategory(url);
-      }
+      });
     });
   }
 
   @Scope("category")
   private async scrapCategory(@ScopeParam("url") url: string) {
-    for (let page = 1; ; page++) {
-      if (!(await this.scrapCategoryPage(url, page))) {
-        return;
-      }
-    }
+    // await parallel.while(1, async (page) => {
+    //   return await this.scrapCategoryPage(url, page);
+    // });
+
+    await parallel()
+      .setLimit(10)
+      .for(1, 15, async (page) => {
+        await this.scrapCategoryPage(url, page);
+      });
+
+    // for (let page = 1; page < 15; page++) {
+    //   if (!(await this.scrapCategoryPage(url, page))) {
+    //     return;
+    //   }
+    // }
   }
 
   @Scope("page")
@@ -75,6 +85,6 @@ class TestRobot extends Robot {
 const test = new TestRobot();
 const run = test.scrapAllCategories();
 run.callbacks.onDataReceived = (output) => {
-  Logger.info(output);
+  // Logger.info(output);
 };
 run.start().then();
