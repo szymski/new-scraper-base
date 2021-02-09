@@ -10,8 +10,12 @@ export class ScopeContext {
   readonly executionName!: string;
   readonly fullExecutionName!: string;
 
-  public data!: any;
+  protected data!: any;
   protected localData: any = {};
+
+  startDate!: Date;
+  endDate?: Date;
+  totalDuration?: number;
 
   protected constructor(data?: Partial<ScopeContext> & { data: any }) {
     Object.assign(this, data ?? {});
@@ -25,9 +29,19 @@ export class ScopeContext {
     return this.#root;
   }
 
-  startDate!: Date;
-  endDate?: Date;
-  totalDuration?: number;
+  get<T>(key: symbol | string): T | undefined {
+    return this.localData[key] !== undefined
+      ? this.localData[key]
+      : this.data[key];
+  }
+
+  set<T>(key: symbol | string, value: T) {
+    return this.data[key] = value;
+  }
+
+  setLocal<T>(key: symbol | string, value: T) {
+    return this.localData[key] = value;
+  }
 
   static inherit(parent: ScopeContext, name: string, formattedParams: string) {
     return new ScopeContext({

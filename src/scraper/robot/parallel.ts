@@ -3,7 +3,8 @@ import { ProgressTracker } from "./progress-tracker";
 import { getCurrentScope } from "./scope";
 import { ScopeContext } from "./scope/scope-context";
 
-const ScopeProgressDataKey = "ScopeProgress";
+const ScopeProgressDataKey = Symbol("ScopeProgress");
+const ParallelIndexDataKey = Symbol("ParallelIndex");
 
 export interface ScopeProgress {
   parent?: ScopeProgress;
@@ -13,10 +14,12 @@ export interface ScopeProgress {
 
 export class Parallel {
   #name?: string;
+  #index: number;
   #taskLimit = 1;
 
-  constructor(name?: string) {
+  constructor(index: number, name?: string) {
     this.#name = name;
+    this.#index = index;
   }
 
   /**
@@ -104,13 +107,18 @@ export class Parallel {
   //   bar.terminate();
   // }
 
-  static getRootProgress(scope: ScopeContext): ScopeProgress | undefined {
-    return scope.root.data[ScopeProgressDataKey];
+  static getRootProgress(scope: ScopeContext) {
+    return scope.root.get<ScopeProgress>(ScopeProgressDataKey);
+  }
+
+  static getAndIncreaseIndex(scope: ScopeContext): number {
+    const number = scope.get<number>(ParallelIndexDataKey) ?? 0;
+    scope.setLocal(ParallelIndexDataKey, number + 1);
+    return number;
   }
 
   private static assignProgress(scope: ScopeContext, tracker: ProgressTracker) {
-    const currentTracker: ScopeProgress | undefined =
-      scope.data[ScopeProgressDataKey];
+    const currentTracker = scope.get<ScopeProgress>(ScopeProgressDataKey);
 
     const newProgress: ScopeProgress = {
       parent: currentTracker,
@@ -122,12 +130,11 @@ export class Parallel {
       currentTracker.children.push(newProgress);
     }
 
-    scope.data[ScopeProgressDataKey] = newProgress;
+    scope.set(ScopeProgressDataKey, newProgress);
   }
 
   private static finalizeProgress(scope: ScopeContext) {
-    const currentTracker: ScopeProgress | undefined =
-      scope.data[ScopeProgressDataKey];
+    const currentTracker = scope.get<ScopeProgress>(ScopeProgressDataKey);
 
     if (currentTracker?.parent) {
       currentTracker.parent.children = currentTracker.parent.children.filter(
@@ -135,10 +142,11 @@ export class Parallel {
       );
     }
 
-    scope.data[ScopeProgressDataKey] = currentTracker?.parent;
+    scope.set(ScopeProgressDataKey, currentTracker?.parent);
   }
 }
 
 export function parallel(name?: string) {
-  return new Parallel(name);
+  const index = Parallel.getAndIncreaseIndex(getCurrentScope());
+  return new Parallel(index, name);
 }
