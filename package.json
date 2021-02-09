@@ -8,7 +8,7 @@
     "test": "jest",
     "example": "ts-node src/example.ts",
     "example2": "ts-node src/example2.ts",
-    "example:gry": "ts-node examples/example-gry.ts"
+    "example:gry": "ts-node src/examples/example-gry.ts"
   },
   "author": "",
   "license": "ISC",
