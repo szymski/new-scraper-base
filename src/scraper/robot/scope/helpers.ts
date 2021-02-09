@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { ScopeParamMetadata } from "../metadata-helpers";
+import { RootScopeContext, ScopeContext } from "./scope-context";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
-import { RootScopeContext, ScopeContext } from "./types";
 
 export function formatScopeParams(
   params: any[],
@@ -26,7 +26,7 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       );
     }
 
-    const scope = inheritScope(
+    const scope = ScopeContext.inherit(
       currentScope,
       name,
       formatScopeParams(params, paramsMetadata)
@@ -55,49 +55,7 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
 
 export function runWithInitialScope<T extends (...params: any[]) => any>(
   fn: T,
-  scope?: Partial<RootScopeContext>
+  scope?: RootScopeContext
 ): ReturnType<T> {
-  return getScopeStorage().run(prepareInitialScope(scope ?? {}), fn);
-}
-
-function prepareInitialScope(
-  data: Partial<RootScopeContext>
-): RootScopeContext {
-  const scope: RootScopeContext = {
-    parent: null,
-    root: null!,
-    name: data.fullName ?? "ROOT",
-    executionName: data.fullName ?? "ROOT",
-    fullName: data.fullName ?? "ROOT",
-    fullExecutionName: data.fullName ?? "ROOT",
-    robot: data.robot!,
-    startDate: new Date(),
-    callbacks: {
-      onDataReceived(type: string, data: any) {},
-      ...(data.callbacks || {}),
-    },
-    data: {},
-  };
-  scope.root = scope;
-  scope.parent = scope;
-  return scope;
-}
-
-function inheritScope(
-  parent: ScopeContext,
-  name: string,
-  formattedParams: string
-): ScopeContext {
-  return {
-    root: parent.root,
-    parent,
-    name: name,
-    executionName: `${name}(${formattedParams})`,
-    fullName: `${parent.fullName}.${name}`,
-    fullExecutionName: `${parent.fullExecutionName}.${name}(${formattedParams})`,
-    startDate: new Date(),
-    data: {
-      ...parent.data,
-    },
-  };
+  return getScopeStorage().run(scope ?? RootScopeContext.create(), fn);
 }

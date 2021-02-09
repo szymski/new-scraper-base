@@ -1,6 +1,6 @@
 import { createEntrypointRun } from "./entrypoint";
 import { getCurrentScope } from "./scope";
-import { ScopeContext } from "./scope/types";
+import { ScopeContext } from "./scope/scope-context";
 import { RobotRun } from "./types";
 
 export class Robot {

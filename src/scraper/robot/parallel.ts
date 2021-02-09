@@ -1,7 +1,7 @@
 import async from "async";
 import { ProgressTracker } from "./progress-tracker";
 import { getCurrentScope } from "./scope";
-import { ScopeContext } from "./scope/types";
+import { ScopeContext } from "./scope/scope-context";
 
 const ScopeProgressDataKey = "ScopeProgress";
 
@@ -12,7 +12,12 @@ export interface ScopeProgress {
 }
 
 export class Parallel {
+  #name?: string;
   #taskLimit = 1;
+
+  constructor(name?: string) {
+    this.#name = name;
+  }
 
   /**
    * Sets the number of max concurrent executions of a task.
@@ -134,6 +139,6 @@ export class Parallel {
   }
 }
 
-export function parallel() {
-  return new Parallel();
+export function parallel(name?: string) {
+  return new Parallel(name);
 }

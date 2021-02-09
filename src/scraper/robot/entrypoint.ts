@@ -7,7 +7,7 @@ import {
 } from "./metadata-helpers";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
-import { RootScopeContext } from "./scope/types";
+import { RootScopeContext } from "./scope/scope-context";
 import { OutputTypeUnion, RobotRun } from "./types";
 
 interface EntrypointContext {
@@ -56,17 +56,12 @@ export function createEntrypointRun<TData, TReturn = any>(
 
   let run: RobotRun<TData, TReturn>;
 
-  const scope: Partial<RootScopeContext> = {
-    fullName: entrypointContext.name,
-    robot: robot,
-    callbacks: {
-      onDataReceived(type: string, data: any) {
-        run.callbacks.onDataReceived({
-          type,
-          data,
-        } as OutputTypeUnion<TData>);
-      },
-    },
+  const scope = RootScopeContext.create(entrypointContext.name, robot);
+  scope.callbacks.onDataReceived = (type, data) => {
+    run.callbacks.onDataReceived({
+      type,
+      data,
+    } as OutputTypeUnion<TData>);
   };
 
   const start = async () => {

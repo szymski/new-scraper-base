@@ -34,9 +34,6 @@ describe("Scope tests", () => {
           "ROOT.A.B.C",
           "ROOT.A.B",
         ]);
-      },
-      {
-        fullName: "ROOT",
       }
     );
   });
@@ -74,9 +71,6 @@ describe("Scope tests", () => {
           "ROOT.F1",
           "ROOT.F3.F2",
         ]);
-      },
-      {
-        fullName: "ROOT",
       }
     );
   });
@@ -100,9 +94,6 @@ describe("Scope tests", () => {
       async () => {
         await robot.fn(123, "str");
         expect(scopeNames).toEqual([`ROOT.fn(param1=123,param2="str")`]);
-      },
-      {
-        fullName: "ROOT",
       }
     );
   });

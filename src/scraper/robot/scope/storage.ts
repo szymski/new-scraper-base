@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "async_hooks";
-import { ScopeContext } from "./types";
+import { ScopeContext } from "./scope-context";
 
 const scopeStorage = new AsyncLocalStorage<ScopeContext>();
 
