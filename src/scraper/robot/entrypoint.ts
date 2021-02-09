@@ -1,10 +1,14 @@
 import { AsyncLocalStorage } from "async_hooks";
 import { Logger } from "../util/logger";
+import {
+  addClassMetadata,
+  ClassMetadataKeys,
+  EntrypointMetadata,
+} from "./metadata-helpers";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/types";
 import { OutputTypeUnion, RobotRun } from "./types";
-import {addClassMetadata, ClassMetadataKeys, EntrypointMetadata} from "./metadata-helpers";
 
 interface EntrypointContext {
   name: string;
@@ -53,7 +57,7 @@ export function createEntrypointRun<TData, TReturn = any>(
   let run: RobotRun<TData, TReturn>;
 
   const scope: Partial<RootScopeContext> = {
-    name: entrypointContext.name,
+    fullName: entrypointContext.name,
     robot: robot,
     callbacks: {
       onDataReceived(type: string, data: any) {

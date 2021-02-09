@@ -22,8 +22,8 @@ export class Logger {
 
     result += colors.grey(new Date().toISOString());
     result += logLevelColor[level](` [${level.toUpperCase()}]`);
-    if(scope) {
-      result += colors.grey(` ${scope?.executionName ?? "global"}:`);
+    if (scope) {
+      result += colors.grey(` ${scope?.fullExecutionName ?? "global"}:`);
     }
     result += logLevelColor[level](` ${this.formatMessage(message)}`);
 
@@ -31,14 +31,14 @@ export class Logger {
   }
 
   private formatMessage(message: any) {
-    if(message instanceof Error) {
-      return `${(message as any).constructor.name} - ${message.message}\n${message.stack!.toString()}`;
-    }
-    else if(typeof message === "string") {
+    if (message instanceof Error) {
+      return `${(message as any).constructor.name} - ${
+        message.message
+      }\n${message.stack!.toString()}`;
+    } else if (typeof message === "string") {
       return message.toString();
-    }
-    else {
-      return JSON.stringify(message, null, 4)
+    } else {
+      return JSON.stringify(message, null, 4);
     }
   }
 

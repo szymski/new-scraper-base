@@ -1,10 +1,11 @@
 import "reflect-metadata";
-import { HttpClient } from "../src/scraper/http-client/http-client";
-import { NodeFetchPerformer } from "../src/scraper/http-client/performers/node-fetch-performer";
-import { Entrypoint } from "../src/scraper/robot/entrypoint";
-import { parallel } from "../src/scraper/robot/parallel";
-import { Robot } from "../src/scraper/robot/robot";
-import { Scope, ScopeParam } from "../src/scraper/robot/scope";
+import { HttpClient } from "../scraper/http-client/http-client";
+import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
+import { Entrypoint } from "../scraper/robot/entrypoint";
+import { Parallel, parallel } from "../scraper/robot/parallel";
+import { ProgressTracker } from "../scraper/robot/progress-tracker";
+import { Robot } from "../scraper/robot/robot";
+import { getCurrentScope, Scope, ScopeParam } from "../scraper/robot/scope";
 
 interface GameData {
   name: string;
@@ -22,14 +23,33 @@ class TestRobot extends Robot {
   @Entrypoint()
   scrapAllCategories() {
     return this.entrypoint<{ game: GameData }>(async () => {
+      const scope = getCurrentScope();
+      setInterval(() => {
+        const progress = Parallel.getRootProgress(scope);
+        if (progress) {
+          console.log(ProgressTracker.renderProgressTree(progress));
+        }
+        // const remap = (progress: ScopeProgress): ScopeProgress => {
+        //   return {
+        //     parent: (progress.parent?.tracker.status
+        //       .name as any) as ScopeProgress,
+        //     tracker: (progress.tracker.status.name as any) as ProgressTracker,
+        //     children: progress.children.map((x) => remap(x)),
+        //   };
+        // };
+        // Logger.error(remap(progress!));
+      }, 1_000);
+
       const $ = await this.client.get("https://stare.e-gry.net/").cheerio();
       const categoryUrls = $("#menulewe .pod:nth-child(10) a")
         .toArray()
         .map((x) => $(x).attr("href")!);
 
-      await parallel().forEach(categoryUrls, async (url) => {
-        await this.scrapCategory(url);
-      });
+      await parallel()
+        .setLimit(4)
+        .forEach(categoryUrls, async (url) => {
+          await this.scrapCategory(url);
+        });
     });
   }
 
@@ -40,7 +60,7 @@ class TestRobot extends Robot {
     // });
 
     await parallel()
-      .setLimit(1)
+      .setLimit(4)
       .for(1, 16, async (page) => {
         await this.scrapCategoryPage(url, page);
       });
@@ -62,9 +82,15 @@ class TestRobot extends Robot {
       .toArray()
       .map((x) => $(x).attr("href")!);
 
-    for (const url of gameUrls) {
-      await this.scrapGame(url);
-    }
+    await parallel()
+      .setLimit(4)
+      .forEach(gameUrls, async (element) => {
+        await this.scrapGame(url);
+      });
+
+    // for (const url of gameUrls) {
+    //   await this.scrapGame(url);
+    // }
 
     return gameUrls.length > 0;
   }

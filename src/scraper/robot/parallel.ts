@@ -1,7 +1,15 @@
 import async from "async";
-import ProgressBar from "progress";
 import { ProgressTracker } from "./progress-tracker";
 import { getCurrentScope } from "./scope";
+import { ScopeContext } from "./scope/types";
+
+const ScopeProgressDataKey = "ScopeProgress";
+
+export interface ScopeProgress {
+  parent?: ScopeProgress;
+  tracker: ProgressTracker;
+  children: ScopeProgress[];
+}
 
 export class Parallel {
   #taskLimit = 1;
@@ -30,15 +38,17 @@ export class Parallel {
       start: 0,
       max: elements.length,
     });
-    console.log(ProgressTracker.renderProgressbar(tracker));
+
+    Parallel.assignProgress(scope, tracker);
+
     await async
       .eachLimit(elements, this.#taskLimit, async (item) => {
         await fn(item);
         tracker.increase();
-        console.log(ProgressTracker.renderProgressbar(tracker));
       })
       .finally(() => {
         tracker.finish();
+        Parallel.finalizeProgress(scope);
       });
   }
 
@@ -56,6 +66,9 @@ export class Parallel {
       start: start,
       max: end,
     });
+
+    Parallel.assignProgress(scope, tracker);
+
     await async
       .timesLimit(end - start, this.#taskLimit, async (n) => {
         await fn(start + n);
@@ -63,6 +76,7 @@ export class Parallel {
       })
       .finally(() => {
         tracker.finish();
+        Parallel.finalizeProgress(scope);
       });
   }
 
@@ -85,17 +99,38 @@ export class Parallel {
   //   bar.terminate();
   // }
 
-  private static createBar(total: number, label?: string) {
-    return new ProgressBar(
-      (label ? `${label} ` : "") + "[:bar] :rate/s :percent ETA: :etas",
-      {
-        total,
-        width: 40,
-        incomplete: " ",
-        complete: "█",
-        head: "▍",
-      }
-    );
+  static getRootProgress(scope: ScopeContext): ScopeProgress | undefined {
+    return scope.root.data[ScopeProgressDataKey];
+  }
+
+  private static assignProgress(scope: ScopeContext, tracker: ProgressTracker) {
+    const currentTracker: ScopeProgress | undefined =
+      scope.data[ScopeProgressDataKey];
+
+    const newProgress: ScopeProgress = {
+      parent: currentTracker,
+      tracker,
+      children: [],
+    };
+
+    if (currentTracker) {
+      currentTracker.children.push(newProgress);
+    }
+
+    scope.data[ScopeProgressDataKey] = newProgress;
+  }
+
+  private static finalizeProgress(scope: ScopeContext) {
+    const currentTracker: ScopeProgress | undefined =
+      scope.data[ScopeProgressDataKey];
+
+    if (currentTracker?.parent) {
+      currentTracker.parent.children = currentTracker.parent.children.filter(
+        (progress) => progress !== currentTracker
+      );
+    }
+
+    scope.data[ScopeProgressDataKey] = currentTracker?.parent;
   }
 }
 

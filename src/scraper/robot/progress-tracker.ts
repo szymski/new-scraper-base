@@ -1,4 +1,5 @@
 import dateFormat from "dateformat";
+import { ScopeProgress } from "./parallel";
 
 interface ProgressTrackerOptions {
   start: number;
@@ -62,6 +63,15 @@ export class ProgressTracker {
     };
   }
 
+  static renderProgressTree(progress: ScopeProgress, depth = 0) {
+    let str = "";
+    str += `${"\t".repeat(depth)}${this.renderProgressbar(progress.tracker)}\n`;
+    for (const child of progress.children) {
+      str += ProgressTracker.renderProgressTree(child, depth + 1);
+    }
+    return str;
+  }
+
   static renderProgressbar(tracker: ProgressTracker) {
     const status = tracker.status;
 
@@ -74,9 +84,8 @@ export class ProgressTracker {
     } `;
     str += "[";
 
-    const finishedWidth = status.percentage != null
-      ? (width - 2) * status.percentage
-      : null;
+    const finishedWidth =
+      status.percentage != null ? (width - 2) * status.percentage : null;
     for (let i = 0; i < width - 2; i++) {
       if (finishedWidth != null) {
         str += i < finishedWidth ? "█" : ".";
@@ -91,8 +100,8 @@ export class ProgressTracker {
 
     str += `, Elapsed: ${dateFormat(status.elapsed * 1_000, "MM:ss")}s`;
 
-    if(status.eta) {
-      str += `, Elapsed: ${dateFormat(status.eta * 1_000, "MM:ss")}s`;
+    if (status.eta) {
+      str += `, ETA: ${dateFormat(status.eta * 1_000, "MM:ss")}s`;
     }
 
     return str;

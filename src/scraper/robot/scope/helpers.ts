@@ -66,14 +66,17 @@ function prepareInitialScope(
   const scope: RootScopeContext = {
     parent: null,
     root: null!,
-    name: data.name ?? "ROOT",
-    executionName: data.name ?? "ROOT",
+    name: data.fullName ?? "ROOT",
+    executionName: data.fullName ?? "ROOT",
+    fullName: data.fullName ?? "ROOT",
+    fullExecutionName: data.fullName ?? "ROOT",
     robot: data.robot!,
     startDate: new Date(),
     callbacks: {
       onDataReceived(type: string, data: any) {},
       ...(data.callbacks || {}),
     },
+    data: {},
   };
   scope.root = scope;
   scope.parent = scope;
@@ -88,8 +91,13 @@ function inheritScope(
   return {
     root: parent.root,
     parent,
-    name: `${parent.name}.${name}`,
-    executionName: `${parent.executionName}.${name}(${formattedParams})`,
+    name: name,
+    executionName: `${name}(${formattedParams})`,
+    fullName: `${parent.fullName}.${name}`,
+    fullExecutionName: `${parent.fullExecutionName}.${name}(${formattedParams})`,
     startDate: new Date(),
+    data: {
+      ...parent.data,
+    },
   };
 }

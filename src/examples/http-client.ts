@@ -1,6 +1,6 @@
-import { HttpClient } from "../src/scraper/http-client/http-client";
-import { httpBasicAuthInterceptor } from "../src/scraper/http-client/interceptors/http-basic-auth-interceptor";
-import { NodeFetchPerformer } from "../src/scraper/http-client/performers/node-fetch-performer";
+import { HttpClient } from "../scraper/http-client/http-client";
+import { httpBasicAuthInterceptor } from "../scraper/http-client/interceptors/http-basic-auth.interceptor";
+import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
 
 async function run() {
   // Initialize HTTP client with node-fetch backend
@@ -30,7 +30,10 @@ async function run() {
   console.log("Page:", page);
 
   // Interceptors can be used to alter requests before performing them
-  await http.get("/users").add.interceptor(httpBasicAuthInterceptor("user", "password")).void();
+  await http
+    .get("/users")
+    .add.interceptor(httpBasicAuthInterceptor("user", "password"))
+    .void();
 }
 
 run().then();

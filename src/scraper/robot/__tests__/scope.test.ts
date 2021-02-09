@@ -12,15 +12,15 @@ describe("Scope tests", () => {
     const scopeNames: string[] = [];
 
     const C = wrapWithScope(async () => {
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
     }, "C");
     const B = wrapWithScope(async () => {
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
       await C();
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
     }, "B");
     const A = wrapWithScope(async () => {
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
       await B();
     }, "A");
 
@@ -36,7 +36,7 @@ describe("Scope tests", () => {
         ]);
       },
       {
-        name: "ROOT",
+        fullName: "ROOT",
       }
     );
   });
@@ -45,16 +45,16 @@ describe("Scope tests", () => {
     const scopeNames: string[] = [];
 
     const F1 = wrapWithScope(async () => {
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
       await nextTick();
       await nextTick();
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
     }, "F1");
 
     const F2 = wrapWithScope(async () => {
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
       await nextTick();
-      scopeNames.push(getCurrentScope().name);
+      scopeNames.push(getCurrentScope().fullName);
     }, "F2");
 
     const F3 = wrapWithScope(async () => {
@@ -76,7 +76,7 @@ describe("Scope tests", () => {
         ]);
       },
       {
-        name: "ROOT",
+        fullName: "ROOT",
       }
     );
   });
@@ -90,7 +90,7 @@ describe("Scope tests", () => {
         @ScopeParam("param1") param1: number,
         @ScopeParam("param2") param2: string
       ) {
-        scopeNames.push(getCurrentScope().executionName);
+        scopeNames.push(getCurrentScope().fullExecutionName);
       }
     }
 
@@ -102,7 +102,7 @@ describe("Scope tests", () => {
         expect(scopeNames).toEqual([`ROOT.fn(param1=123,param2="str")`]);
       },
       {
-        name: "ROOT",
+        fullName: "ROOT",
       }
     );
   });
