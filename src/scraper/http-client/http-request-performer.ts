@@ -1,5 +1,11 @@
+import { AbortSignal } from "abort-controller";
 import { CookieJar } from "tough-cookie";
-import { HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType } from "./http-client";
+import {
+HttpMethod,
+HttpRequestBodyType,
+HttpRequestPerformerResponseType
+} from "./http-client";
+
 
 export enum HttpRequestError {
   Timeout = "timeout",
@@ -7,6 +13,7 @@ export enum HttpRequestError {
   AddressNotFound = "address_not_found",
   PurposefulInterruption = "purposeful_interruption",
   Other = "other",
+  Aborted = "aborted",
 }
 
 export interface HttpRequestPerformer {
@@ -21,6 +28,7 @@ export interface HttpRequestPerformInput {
   headers: Record<string, string>;
   cookies: CookieJar;
   responseType: HttpRequestPerformerResponseType;
+  abortSignal?: AbortSignal;
 }
 
 export interface HttpRequestPerformOutputFail {
@@ -38,4 +46,6 @@ export interface HttpRequestPerformOutputSuccess {
   retry?: boolean;
 }
 
-export type HttpRequestPerformOutput = HttpRequestPerformOutputFail | HttpRequestPerformOutputSuccess;
+export type HttpRequestPerformOutput =
+  | HttpRequestPerformOutputFail
+  | HttpRequestPerformOutputSuccess;

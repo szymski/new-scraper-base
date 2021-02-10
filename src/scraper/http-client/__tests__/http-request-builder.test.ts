@@ -14,11 +14,14 @@ import {
   HttpRequestPerformOutput,
 } from "../http-request-performer";
 import { ResponseInterceptorFunction } from "../interceptors/interfaces";
+import {AbortedException} from "../../exceptions";
 
 describe("HttpRequestBuilder", () => {
   const mockPerformer = (data?: any): HttpRequestPerformer => {
     return {
-      async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+      async perform(
+        input: HttpRequestPerformInput
+      ): Promise<HttpRequestPerformOutput> {
         return {
           success: true,
           data,
@@ -52,7 +55,9 @@ describe("HttpRequestBuilder", () => {
     });
 
     test("Should get cheerio", async () => {
-      const performer = mockPerformer(new Buffer("<div class='asd'>text in div</div>>"));
+      const performer = mockPerformer(
+        new Buffer("<div class='asd'>text in div</div>>")
+      );
       const client = new HttpClient(performer);
       const $ = await client.get("some_url").cheerio();
       expect($("div.asd").text()).toEqual("text in div");
@@ -232,7 +237,10 @@ describe("HttpRequestBuilder", () => {
           })
         );
 
-        await client.get("http://test.com").add.urlParam("param1", "value").void();
+        await client
+          .get("http://test.com")
+          .add.urlParam("param1", "value")
+          .void();
 
         expect(spy).toBeCalledWith(
           expect.objectContaining({
@@ -240,7 +248,10 @@ describe("HttpRequestBuilder", () => {
           })
         );
 
-        await client.get("http://test.com/").add.urlParam("param1", "value").void();
+        await client
+          .get("http://test.com/")
+          .add.urlParam("param1", "value")
+          .void();
 
         expect(spy).toBeCalledWith(
           expect.objectContaining({
@@ -248,7 +259,10 @@ describe("HttpRequestBuilder", () => {
           })
         );
 
-        await client.get("http://test.com/?").add.urlParam("param1", "value").void();
+        await client
+          .get("http://test.com/?")
+          .add.urlParam("param1", "value")
+          .void();
 
         expect(spy).toBeCalledWith(
           expect.objectContaining({
@@ -332,7 +346,9 @@ describe("HttpRequestBuilder", () => {
   describe("Exception handling", () => {
     test("Should throw timeout exception when performer times out", async () => {
       const performer: HttpRequestPerformer = {
-        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
           return {
             success: false,
             errorCode: HttpRequestError.Timeout,
@@ -349,7 +365,9 @@ describe("HttpRequestBuilder", () => {
 
     test("Should throw invalid url exception", async () => {
       const performer: HttpRequestPerformer = {
-        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
           return {
             success: false,
             errorCode: HttpRequestError.InvalidUrl,
@@ -366,7 +384,9 @@ describe("HttpRequestBuilder", () => {
 
     test("Should throw address not found exception", async () => {
       const performer: HttpRequestPerformer = {
-        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
           return {
             success: false,
             errorCode: HttpRequestError.AddressNotFound,
@@ -383,7 +403,9 @@ describe("HttpRequestBuilder", () => {
 
     test("Should throw not found exception on 404", async () => {
       const performer: HttpRequestPerformer = {
-        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
           return {
             success: true,
             statusCode: 404,
@@ -402,7 +424,9 @@ describe("HttpRequestBuilder", () => {
 
     test("Should throw forbidden exception on 403", async () => {
       const performer: HttpRequestPerformer = {
-        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
           return {
             success: true,
             statusCode: 403,
@@ -421,7 +445,9 @@ describe("HttpRequestBuilder", () => {
 
     test("Should throw unauthorized exception on 401", async () => {
       const performer: HttpRequestPerformer = {
-        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
           return {
             success: true,
             statusCode: 401,
@@ -437,6 +463,25 @@ describe("HttpRequestBuilder", () => {
 
       await expect(t()).rejects.toThrow(HttpUnauthorizedException);
     });
+
+    test("Should throw aborted exception on abort", async () => {
+      const performer: HttpRequestPerformer = {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
+          return {
+            success: false,
+            errorCode: HttpRequestError.Aborted,
+          };
+        },
+      };
+
+      const client = new HttpClient(performer);
+
+      const t = () => client.get("test").void();
+
+      await expect(t()).rejects.toThrow(AbortedException);
+    });
   });
 
   describe("Request performing", () => {
@@ -444,7 +489,9 @@ describe("HttpRequestBuilder", () => {
       let runs = 0;
 
       const performer: HttpRequestPerformer = {
-        async perform(input: HttpRequestPerformInput): Promise<HttpRequestPerformOutput> {
+        async perform(
+          input: HttpRequestPerformInput
+        ): Promise<HttpRequestPerformOutput> {
           runs++;
           return runs == 1
             ? {
@@ -460,7 +507,11 @@ describe("HttpRequestBuilder", () => {
         },
       };
 
-      const responseInterceptor: ResponseInterceptorFunction = async (output, config, context) => {
+      const responseInterceptor: ResponseInterceptorFunction = async (
+        output,
+        config,
+        context
+      ) => {
         output.retry = runs <= 1;
       };
 

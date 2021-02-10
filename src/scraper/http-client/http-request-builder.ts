@@ -1,4 +1,6 @@
+import {AbortSignal} from "abort-controller";
 import Cheerio from "cheerio";
+import {getCurrentScopeNoFail} from "../robot/scope";
 import {
   HttpAddressNotFoundException,
   HttpBuilderAlreadyUsed,
@@ -9,18 +11,19 @@ import {
   HttpTimeoutException,
   HttpUnauthorizedException,
 } from "./exceptions";
-import { HttpClient, HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType } from "./http-client";
-import { HttpClientConfig } from "./http-client-config";
+import {HttpClient, HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType,} from "./http-client";
+import {HttpClientConfig} from "./http-client-config";
 import {
   HttpRequestError,
   HttpRequestPerformInput,
   HttpRequestPerformOutput,
   HttpRequestPerformOutputSuccess,
 } from "./http-request-performer";
-import { InterceptorLike, RequestInterceptorLike, ResponseInterceptorLike } from "./interceptors/interfaces";
-import { HttpRequestAdd } from "./interfaces";
+import {InterceptorLike, RequestInterceptorLike, ResponseInterceptorLike,} from "./interceptors/interfaces";
+import {HttpRequestAdd} from "./interfaces";
 import CheerioAPI = cheerio.CheerioAPI;
 import Root = cheerio.Root;
+import {AbortedException} from "../exceptions";
 
 export interface HttpRequestBuilder {
   appendConfig(config: HttpClientConfig): this;
@@ -70,13 +73,19 @@ export class HttpRequestBuilder {
 
   #used = false;
 
+  #abortSignal?: AbortSignal;
+
   constructor(
     private readonly client: HttpClient,
     private readonly method: HttpMethod,
     private readonly url: string,
-    private readonly perform: (request: HttpRequestPerformInput) => Promise<HttpRequestPerformOutput>
+    private readonly perform: (
+      request: HttpRequestPerformInput
+    ) => Promise<HttpRequestPerformOutput>
   ) {
     this.#config = client.config.clone();
+    // TODO: Maybe move this to an interceptor
+    this.#abortSignal = getCurrentScopeNoFail()?.root.abortController.signal;
   }
 
   text(): Promise<string> {
@@ -179,12 +188,15 @@ export class HttpRequestBuilder {
         throw new HttpTimeoutException(output.errorMessage);
       } else if (output.errorCode === HttpRequestError.InvalidUrl) {
         throw new HttpInvalidUrlException(output.errorMessage);
-      }
-      if (output.errorCode === HttpRequestError.AddressNotFound) {
+      } else if (output.errorCode === HttpRequestError.AddressNotFound) {
         throw new HttpAddressNotFoundException(output.errorMessage);
       } else if (output.errorCode === HttpRequestError.PurposefulInterruption) {
         throw new HttpException("Request interrupted on purpose");
-      } else {
+      }
+      else if(output.errorCode === HttpRequestError.Aborted) {
+        throw new AbortedException();
+      }
+      else {
         throw new HttpException(output.errorMessage);
       }
     }
@@ -244,9 +256,15 @@ export class HttpRequestBuilder {
     },
   };
 
-  private async getPerformInput(responseType: HttpRequestPerformerResponseType): Promise<HttpRequestPerformInput> {
+  private async getPerformInput(
+    responseType: HttpRequestPerformerResponseType
+  ): Promise<HttpRequestPerformInput> {
     const urlParamsString = this.#config.urlParams.toString();
-    const joinedUrl = this.joinUrl(this.#config.baseUrl, this.url, urlParamsString);
+    const joinedUrl = this.joinUrl(
+      this.#config.baseUrl,
+      this.url,
+      urlParamsString
+    );
 
     let input: HttpRequestPerformInput = {
       method: this.method,
@@ -256,10 +274,12 @@ export class HttpRequestBuilder {
       headers: this.#config.headers,
       cookies: this.#config.cookies,
       responseType: responseType,
+      abortSignal: this.#abortSignal,
     };
 
     for (const interceptor of this.#config.interceptors.request) {
-      input = <any>await interceptor(input, this.#config, this.#context) ?? input;
+      input =
+        <any>await interceptor(input, this.#config, this.#context) ?? input;
     }
 
     return input;
@@ -286,7 +306,10 @@ export class HttpRequestBuilder {
       }
     }
 
-    if (url.toLowerCase().startsWith("http://") || url.toLowerCase().startsWith("https://")) {
+    if (
+      url.toLowerCase().startsWith("http://") ||
+      url.toLowerCase().startsWith("https://")
+    ) {
       prefix = "";
     }
 
@@ -297,7 +320,9 @@ export class HttpRequestBuilder {
     let response = await this.perform(input);
 
     for (const interceptor of this.#config.interceptors.response) {
-      response = <any>await interceptor(response, this.#config, this.#context) ?? response;
+      response =
+        <any>await interceptor(response, this.#config, this.#context) ??
+        response;
     }
 
     return response;

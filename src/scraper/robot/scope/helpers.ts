@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { AbortedException } from "../../exceptions";
 import { ScopeParamMetadata } from "../metadata-helpers";
 import { RootScopeContext, ScopeContext } from "./scope-context";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
@@ -24,6 +25,10 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       throw new Error(
         "Attempted to run scraper method without scope. You probably run a scraper method without an entrypoint. All scraping should start in a function marked with @Entrypoint()."
       );
+    }
+
+    if (currentScope.root.abortController.signal.aborted) {
+      throw new AbortedException();
     }
 
     const scope = ScopeContext.inherit(

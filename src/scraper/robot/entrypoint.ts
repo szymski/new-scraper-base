@@ -1,14 +1,14 @@
 import { AsyncLocalStorage } from "async_hooks";
 import { Logger } from "../util/logger";
 import {
-  addClassMetadata,
-  ClassMetadataKeys,
-  EntrypointMetadata,
+addClassMetadata,
+ClassMetadataKeys,
+EntrypointMetadata
 } from "./metadata-helpers";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/scope-context";
-import { OutputTypeUnion, RobotRun } from "./types";
+import { OutputTypeUnion,RobotRun } from "./types";
 
 interface EntrypointContext {
   name: string;
@@ -58,23 +58,49 @@ export function createEntrypointRun<TData, TReturn = any>(
 
   const scope = RootScopeContext.create(entrypointContext.name, robot);
   scope.callbacks.onDataReceived = (type, data) => {
-    run.callbacks.onDataReceived({
-      type,
-      data,
-    } as OutputTypeUnion<TData>);
+    if(!scope.abortController.signal.aborted) {
+      run.callbacks.onDataReceived({
+        type,
+        data,
+      } as OutputTypeUnion<TData>);
+    }
   };
 
   const start = async () => {
+    if(run.status !== "initial") {
+      throw new Error(`Only 'initial' status allows run to be started. Current: '${run.status}'`);
+    }
+
     Logger.verbose(`Running entrypoint ${entrypointContext.name}`);
+    run.status = "running";
     const result = await runWithInitialScope(fn, scope);
+    run.status = "finished";
     Logger.verbose(`Robot action '${entrypointContext.name}' finished`);
+    run.callbacks.onFinished();
     return result;
   };
 
   run = {
-    start,
+    status: "initial",
+    rootScope: scope,
     callbacks: {
       onDataReceived(data: OutputTypeUnion<TData>) {},
+      onFinished() {},
+      onCancelled() {},
+    },
+    start,
+    async cancel() {
+      if (run.status !== "running") {
+        throw new Error(
+          `The run has to be in status 'running' to be cancelled. Current: '${run.status}'`
+        );
+      }
+
+      Logger.verbose("Cancelling run...");
+      run.status = "cancelled";
+      scope.abortController.abort();
+      // TODO: Consider waiting for all scopes to exit/throw before calling
+      run.callbacks.onCancelled();
     },
   };
 

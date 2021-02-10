@@ -1,3 +1,4 @@
+import AbortController from "abort-controller"
 import { Robot } from "../robot";
 import { ScopeCallbacks } from "./types";
 
@@ -32,15 +33,29 @@ export class ScopeContext {
   get<T>(key: symbol | string): T | undefined {
     return this.localData[key] !== undefined
       ? this.localData[key]
-      : this.data[key];
+      : ScopeContext.getNonLocalRecursively<T>(this, key);
+  }
+
+  // TODO: Come up with a better solution than recursive call
+  protected static getNonLocalRecursively<T>(scope: ScopeContext, key: symbol | string): T | undefined {
+    const data = scope.data[key];
+    if(data === undefined) {
+      if(scope.parent) {
+        return ScopeContext.getNonLocalRecursively(scope.parent, key);
+      }
+      else {
+        return undefined;
+      }
+    }
+    return data;
   }
 
   set<T>(key: symbol | string, value: T) {
-    return this.data[key] = value;
+    return (this.data[key] = value);
   }
 
   setLocal<T>(key: symbol | string, value: T) {
-    return this.localData[key] = value;
+    return (this.localData[key] = value);
   }
 
   static inherit(parent: ScopeContext, name: string, formattedParams: string) {
@@ -64,11 +79,13 @@ export class RootScopeContext extends ScopeContext {
   readonly callbacks: ScopeCallbacks = {
     onDataReceived(type: string, data: any) {},
   };
+  readonly abortController: AbortController;
 
   protected constructor(data: Partial<RootScopeContext>) {
     super();
     Object.assign(this, data);
     this.data = {};
+    this.abortController = new AbortController();
   }
 
   get root() {

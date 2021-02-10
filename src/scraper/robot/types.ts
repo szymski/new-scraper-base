@@ -1,9 +1,18 @@
+import { RootScopeContext } from "./scope/scope-context";
+
+export type RobotRunStatus = "initial" | "running" | "finished" | "cancelled";
+
 export interface RobotRun<TData, TReturn> {
+  status: RobotRunStatus;
+  rootScope: RootScopeContext;
   callbacks: {
     onDataReceived(output: OutputTypeUnion<TData>): void;
+    onFinished(): void;
+    onCancelled(): void;
   };
 
   start(): Promise<TReturn>;
+  cancel(): Promise<void>;
 }
 
 type OutputType<TName, TData> = {

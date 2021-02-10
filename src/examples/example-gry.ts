@@ -6,6 +6,7 @@ import { Parallel, parallel } from "../scraper/robot/parallel";
 import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
 import { getCurrentScope, Scope, ScopeParam } from "../scraper/robot/scope";
+import { Logger } from "../scraper/util/logger";
 
 interface GameData {
   name: string;
@@ -46,7 +47,7 @@ class TestRobot extends Robot {
         .map((x) => $(x).attr("href")!);
 
       await parallel()
-        .setLimit(4)
+        .setLimit(1)
         .forEach(categoryUrls, async (url) => {
           await this.scrapCategory(url);
         });
@@ -60,7 +61,7 @@ class TestRobot extends Robot {
     // });
 
     await parallel()
-      .setLimit(4)
+      .setLimit(1)
       .for(1, 16, async (page) => {
         await this.scrapCategoryPage(url, page);
       });
@@ -82,15 +83,15 @@ class TestRobot extends Robot {
       .toArray()
       .map((x) => $(x).attr("href")!);
 
-    await parallel()
-      .setLimit(4)
-      .forEach(gameUrls, async (element) => {
-        await this.scrapGame(url);
-      });
+    // await parallel()
+    //   .setLimit(1)
+    //   .forEach(gameUrls, async (element) => {
+    //     await this.scrapGame(url);
+    //   });
 
-    // for (const url of gameUrls) {
-    //   await this.scrapGame(url);
-    // }
+    for (const url of gameUrls) {
+      await this.scrapGame(url);
+    }
 
     return gameUrls.length > 0;
   }
@@ -110,7 +111,30 @@ class TestRobot extends Robot {
 
 const test = new TestRobot();
 const run = test.scrapAllCategories();
+
 run.callbacks.onDataReceived = (output) => {
   // Logger.info(output);
 };
-run.start().then();
+
+run.callbacks.onFinished = () => {
+  Logger.info("onFinished");
+  // for (const key of Object.keys(
+  //   Parallel.getRootCheckpoints(run.rootScope).checkpoints
+  // )) {
+  //   Logger.error(key);
+  // }
+};
+
+run.callbacks.onCancelled = () => {
+  Logger.warn(JSON.stringify(Object.keys(Parallel.getRootCheckpoints(run.rootScope).checkpoints), null, "\t"));
+};
+
+run
+  .start()
+  .catch((e) => {})
+  .then();
+
+setTimeout(() => {
+  run.cancel()
+    .then(() => {});
+}, 28_000);
