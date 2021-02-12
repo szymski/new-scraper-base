@@ -83,15 +83,15 @@ class TestRobot extends Robot {
       .toArray()
       .map((x) => $(x).attr("href")!);
 
-    // await parallel()
-    //   .setLimit(1)
-    //   .forEach(gameUrls, async (element) => {
-    //     await this.scrapGame(url);
-    //   });
+    await parallel()
+      .setLimit(1)
+      .forEach(gameUrls, async (element) => {
+        await this.scrapGame(url);
+      });
 
-    for (const url of gameUrls) {
-      await this.scrapGame(url);
-    }
+    // for (const url of gameUrls) {
+    //   await this.scrapGame(url);
+    // }
 
     return gameUrls.length > 0;
   }
@@ -126,7 +126,13 @@ run.callbacks.onFinished = () => {
 };
 
 run.callbacks.onCancelled = () => {
-  Logger.warn(JSON.stringify(Object.keys(Parallel.getRootCheckpoints(run.rootScope).checkpoints), null, "\t"));
+  Logger.warn(
+    JSON.stringify(
+      Object.keys(Parallel.getRootCheckpoints(run.rootScope).checkpoints),
+      null,
+      "\t"
+    )
+  );
 };
 
 run
@@ -135,6 +141,5 @@ run
   .then();
 
 setTimeout(() => {
-  run.cancel()
-    .then(() => {});
-}, 28_000);
+  run.cancel().then(() => {});
+}, 20_000);

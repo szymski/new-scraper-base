@@ -38,10 +38,12 @@ export class Parallel {
     this.#index = index;
 
     let parentKey: string | undefined;
-    if(scope.parent) {
+    if (scope.parent) {
       parentKey = scope.parent.get<string>(CheckpointUniqueIdDataKey);
     }
-    this.#uniqueId = `${parentKey ? `${parentKey}.` : ""}${scope.name}[${index}]`;
+    this.#uniqueId = `${parentKey ? `${parentKey}.` : ""}${
+      scope.name
+    }[${index}]`;
     scope.set(CheckpointUniqueIdDataKey, this.#uniqueId);
   }
 
@@ -72,18 +74,9 @@ export class Parallel {
 
     Parallel.assignProgress(scope, tracker);
 
-    const originalId = this.#uniqueId;
-
     await async
       .eachLimit(elements, this.#taskLimit, async (item) => {
-        scope.set(CheckpointUniqueIdDataKey, `${originalId}[${JSON.stringify(item)}]`);
-        await fn(item);
-        scope.set(CheckpointUniqueIdDataKey, originalId);
-        tracker.increase();
-        Parallel.markCheckpointAsFinished(
-          scope,
-          `${this.#uniqueId}[${JSON.stringify(item)}]`
-        );
+        await this.wrapElement(item, tracker, async () => await fn(item));
       })
       .finally(() => {
         tracker.finish();
@@ -108,15 +101,9 @@ export class Parallel {
 
     Parallel.assignProgress(scope, tracker);
 
-    const originalId = this.#uniqueId;
-
     await async
       .timesLimit(end - start, this.#taskLimit, async (n) => {
-        scope.set(CheckpointUniqueIdDataKey, `${originalId}[${n}]`);
-        await fn(start + n);
-        scope.set(CheckpointUniqueIdDataKey, originalId);
-        tracker.increase();
-        Parallel.markCheckpointAsFinished(scope, `${this.#uniqueId}[${n}]`);
+        await this.wrapElement(n, tracker, async () => await fn(start + n));
       })
       .finally(() => {
         tracker.finish();
@@ -207,7 +194,7 @@ export class Parallel {
       checkpoints.checkpoints[uniqueId] = checkpoint;
     }
 
-    Logger.warn(`Removing: ${uniqueId}`);
+    // Logger.warn(`Removing: ${uniqueId}`);
     // Clear child checkpoints
     const keysToDelete = Object.keys(checkpoints.checkpoints).filter(
       (key) => key.startsWith(uniqueId) && key != uniqueId
@@ -223,6 +210,20 @@ export class Parallel {
   ) {
     Logger.verbose(`Restoring checkpoints`);
     scope.set(ParallelCheckpointsRootDataKey, checkpoints);
+  }
+
+  private async wrapElement(
+    item: any,
+    tracker: ProgressTracker,
+    fn: () => Promise<any>
+  ) {
+    const checkpointId = `${this.#uniqueId}[${JSON.stringify(item)}]`;
+    const scope = getCurrentScope();
+    scope.set(CheckpointUniqueIdDataKey, checkpointId);
+    await fn();
+    scope.set(CheckpointUniqueIdDataKey, this.#uniqueId);
+    tracker.increase();
+    Parallel.markCheckpointAsFinished(scope, checkpointId);
   }
 }
 
