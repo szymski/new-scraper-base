@@ -1,10 +1,11 @@
 import dateFormat from "dateformat";
 import { ScopeProgress } from "./parallel";
 
-interface ProgressTrackerOptions {
+export interface ProgressTrackerOptions {
   start: number;
   max?: number;
   name?: string;
+  onUpdate?: (tracker: ProgressTracker) => void;
 }
 
 interface ProgressTrackerStatus {
@@ -30,10 +31,16 @@ export class ProgressTracker {
 
   increase(value?: number) {
     this.#current += value ?? 1;
+    if (this.options.onUpdate) {
+      this.options.onUpdate(this);
+    }
   }
 
   finish() {
     this.#finished = true;
+    if (this.options.onUpdate) {
+      this.options.onUpdate(this);
+    }
   }
 
   get status(): ProgressTrackerStatus {

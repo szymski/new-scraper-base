@@ -1,6 +1,7 @@
 import AbortController from "abort-controller"
 import { Robot } from "../robot";
 import { ScopeCallbacks } from "./types";
+import { Feature, FeatureContext, FeatureRunProperties } from "../features/progress";
 
 export class ScopeContext {
   #root!: RootScopeContext;
@@ -21,6 +22,10 @@ export class ScopeContext {
   protected constructor(data?: Partial<ScopeContext> & { data: any }) {
     Object.assign(this, data ?? {});
   }
+
+  feature<T extends Feature>(feature: new () => T): FeatureContext<T> {
+    return null!;
+  };
 
   set root(value: RootScopeContext) {
     this.#root = value;

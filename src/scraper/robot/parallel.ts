@@ -4,10 +4,12 @@ import { ProgressTracker } from "./progress-tracker";
 import { getCurrentScope } from "./scope";
 import { ScopeContext } from "./scope/scope-context";
 
-const ScopeProgressDataKey = Symbol("ScopeProgress");
-const ParallelIndexDataKey = Symbol("ParallelIndex");
-const ParallelCheckpointsRootDataKey = Symbol("ParallelCheckpointsRoot");
-const CheckpointUniqueIdDataKey = Symbol("CheckpointUniqueId");
+const DATA_KEYS = {
+  ScopeProgress: Symbol("ScopeProgress"),
+  ParallelIndex: Symbol("ParallelIndex"),
+  ParallelCheckpointsRoot: Symbol("ParallelCheckpointsRoot"),
+  CheckpointUniqueId: Symbol("CheckpointUniqueId"),
+} as const;
 
 interface ParallelCheckpoints {
   checkpoints: { [uniqueId: string]: ParallelCheckpoint };
@@ -39,12 +41,12 @@ export class Parallel {
 
     let parentKey: string | undefined;
     if (scope.parent) {
-      parentKey = scope.parent.get<string>(CheckpointUniqueIdDataKey);
+      parentKey = scope.parent.get<string>(DATA_KEYS.CheckpointUniqueId);
     }
     this.#uniqueId = `${parentKey ? `${parentKey}.` : ""}${
       scope.name
     }[${index}]`;
-    scope.set(CheckpointUniqueIdDataKey, this.#uniqueId);
+    scope.set(DATA_KEYS.CheckpointUniqueId, this.#uniqueId);
   }
 
   /**
@@ -114,7 +116,6 @@ export class Parallel {
   /**
    * Parallelize actions performed in a for loop, without known sequence length.
    * The callback should return a boolean value which indicates if execution should be continued.
-   * @param elements Sequence of elements
    * @param fn Function to run for each element
    */
   async countWhile<T>(start: number, fn: (i: number) => Promise<boolean>) {
@@ -145,17 +146,17 @@ export class Parallel {
   }
 
   static getRootProgress(scope: ScopeContext) {
-    return scope.root.get<ScopeProgress>(ScopeProgressDataKey);
+    return scope.root.get<ScopeProgress>(DATA_KEYS.ScopeProgress);
   }
 
   static getAndIncreaseIndex(scope: ScopeContext): number {
-    const number = scope.get<number>(ParallelIndexDataKey) ?? 0;
-    scope.setLocal(ParallelIndexDataKey, number + 1);
+    const number = scope.get<number>(DATA_KEYS.ParallelIndex) ?? 0;
+    scope.setLocal(DATA_KEYS.ParallelIndex, number + 1);
     return number;
   }
 
   private static assignProgress(scope: ScopeContext, tracker: ProgressTracker) {
-    const currentTracker = scope.get<ScopeProgress>(ScopeProgressDataKey);
+    const currentTracker = scope.get<ScopeProgress>(DATA_KEYS.ScopeProgress);
 
     const newProgress: ScopeProgress = {
       parent: currentTracker,
@@ -167,11 +168,11 @@ export class Parallel {
       currentTracker.children.push(newProgress);
     }
 
-    scope.set(ScopeProgressDataKey, newProgress);
+    scope.set(DATA_KEYS.ScopeProgress, newProgress);
   }
 
   private static finalizeProgress(scope: ScopeContext) {
-    const currentTracker = scope.get<ScopeProgress>(ScopeProgressDataKey);
+    const currentTracker = scope.get<ScopeProgress>(DATA_KEYS.ScopeProgress);
 
     if (currentTracker?.parent) {
       currentTracker.parent.children = currentTracker.parent.children.filter(
@@ -179,18 +180,18 @@ export class Parallel {
       );
     }
 
-    scope.set(ScopeProgressDataKey, currentTracker?.parent);
+    scope.set(DATA_KEYS.ScopeProgress, currentTracker?.parent);
   }
 
   static getRootCheckpoints(scope: ScopeContext) {
     let checkpoints = scope.get<ParallelCheckpoints>(
-      ParallelCheckpointsRootDataKey
+      DATA_KEYS.ParallelCheckpointsRoot
     );
     if (!checkpoints) {
       checkpoints = {
         checkpoints: {},
       };
-      scope.root.set(ParallelCheckpointsRootDataKey, checkpoints);
+      scope.root.set(DATA_KEYS.ParallelCheckpointsRoot, checkpoints);
     }
     return checkpoints;
   }
@@ -223,7 +224,7 @@ export class Parallel {
     checkpoints: ParallelCheckpoints
   ) {
     Logger.verbose(`Restoring checkpoints`);
-    scope.set(ParallelCheckpointsRootDataKey, checkpoints);
+    scope.set(DATA_KEYS.ParallelCheckpointsRoot, checkpoints);
   }
 
   private async wrapElement<T>(
@@ -233,9 +234,9 @@ export class Parallel {
   ) {
     const checkpointId = `${this.#uniqueId}[${JSON.stringify(item)}]`;
     const scope = getCurrentScope();
-    scope.set(CheckpointUniqueIdDataKey, checkpointId);
+    scope.set(DATA_KEYS.CheckpointUniqueId, checkpointId);
     const result = await fn();
-    scope.set(CheckpointUniqueIdDataKey, this.#uniqueId);
+    scope.set(DATA_KEYS.CheckpointUniqueId, this.#uniqueId);
     tracker.increase();
     Parallel.markCheckpointAsFinished(scope, checkpointId);
     return result;
