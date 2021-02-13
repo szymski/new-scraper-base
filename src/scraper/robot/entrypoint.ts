@@ -1,14 +1,19 @@
 import { AsyncLocalStorage } from "async_hooks";
 import { Logger } from "../util/logger";
 import {
-addClassMetadata,
-ClassMetadataKeys,
-EntrypointMetadata
+  Feature,
+  FeatureRunProperties,
+  mapFeatureToRunProperties,
+} from "./feature";
+import {
+  addClassMetadata,
+  ClassMetadataKeys,
+  EntrypointMetadata,
 } from "./metadata-helpers";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/scope-context";
-import { OutputTypeUnion,RobotRun } from "./types";
+import { OutputTypeUnion, RobotRun } from "./types";
 
 interface EntrypointContext {
   name: string;
@@ -58,7 +63,7 @@ export function createEntrypointRun<TData, TReturn = any>(
 
   const scope = RootScopeContext.create(entrypointContext.name, robot);
   scope.callbacks.onDataReceived = (type, data) => {
-    if(!scope.abortController.signal.aborted) {
+    if (!scope.abortController.signal.aborted) {
       run.callbacks.onDataReceived({
         type,
         data,
@@ -66,9 +71,16 @@ export function createEntrypointRun<TData, TReturn = any>(
     }
   };
 
+  const featureProperties = new Map<
+    new () => Feature,
+    FeatureRunProperties<any>
+  >();
+
   const start = async () => {
-    if(run.status !== "initial") {
-      throw new Error(`Only 'initial' status allows run to be started. Current: '${run.status}'`);
+    if (run.status !== "initial") {
+      throw new Error(
+        `Only 'initial' status allows run to be started. Current: '${run.status}'`
+      );
     }
 
     Logger.verbose(`Running entrypoint ${entrypointContext.name}`);
@@ -101,6 +113,19 @@ export function createEntrypointRun<TData, TReturn = any>(
       scope.abortController.abort();
       // TODO: Consider waiting for all scopes to exit/throw before calling
       run.callbacks.onCancelled();
+    },
+    feature<TFeature extends Feature>(
+      Feature: new () => TFeature
+    ): FeatureRunProperties<TFeature> {
+      let properties = featureProperties.get(Feature);
+      if(!properties) {
+        properties = mapFeatureToRunProperties(
+            Feature,
+            this.rootScope.getFeatureConfiguration(Feature)
+        );
+        featureProperties.set(Feature, properties);
+      }
+      return properties;
     },
   };
 

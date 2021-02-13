@@ -1,3 +1,4 @@
+import { Feature, FeatureRunProperties } from "./feature";
 import { RootScopeContext } from "./scope/scope-context";
 
 export type RobotRunStatus = "initial" | "running" | "finished" | "cancelled";
@@ -12,7 +13,10 @@ export interface RobotRun<TData, TReturn> {
   };
 
   start(): Promise<TReturn>;
+
   cancel(): Promise<void>;
+
+  feature<T extends Feature>(feature: new () => T): FeatureRunProperties<T>;
 }
 
 type OutputType<TName, TData> = {

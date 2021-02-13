@@ -1,29 +1,29 @@
-import {AbortSignal} from "abort-controller";
+import { AbortSignal } from "abort-controller";
 import Cheerio from "cheerio";
-import {getCurrentScopeNoFail} from "../robot/scope";
+import { AbortedException } from "../exceptions";
+import { getCurrentScopeNoFail } from "../robot/scope";
 import {
-  HttpAddressNotFoundException,
-  HttpBuilderAlreadyUsed,
-  HttpException,
-  HttpForbiddenException,
-  HttpInvalidUrlException,
-  HttpNotFoundException,
-  HttpTimeoutException,
-  HttpUnauthorizedException,
+HttpAddressNotFoundException,
+HttpBuilderAlreadyUsed,
+HttpException,
+HttpForbiddenException,
+HttpInvalidUrlException,
+HttpNotFoundException,
+HttpTimeoutException,
+HttpUnauthorizedException
 } from "./exceptions";
-import {HttpClient, HttpMethod, HttpRequestBodyType, HttpRequestPerformerResponseType,} from "./http-client";
-import {HttpClientConfig} from "./http-client-config";
+import { HttpClient,HttpMethod,HttpRequestBodyType,HttpRequestPerformerResponseType } from "./http-client";
+import { HttpClientConfig } from "./http-client-config";
 import {
-  HttpRequestError,
-  HttpRequestPerformInput,
-  HttpRequestPerformOutput,
-  HttpRequestPerformOutputSuccess,
+HttpRequestError,
+HttpRequestPerformInput,
+HttpRequestPerformOutput,
+HttpRequestPerformOutputSuccess
 } from "./http-request-performer";
-import {InterceptorLike, RequestInterceptorLike, ResponseInterceptorLike,} from "./interceptors/interfaces";
-import {HttpRequestAdd} from "./interfaces";
+import { InterceptorLike,RequestInterceptorLike,ResponseInterceptorLike } from "./interceptors/interfaces";
+import { HttpRequestAdd } from "./interfaces";
 import CheerioAPI = cheerio.CheerioAPI;
 import Root = cheerio.Root;
-import {AbortedException} from "../exceptions";
 
 export interface HttpRequestBuilder {
   appendConfig(config: HttpClientConfig): this;

@@ -1,10 +1,11 @@
 import dateFormat from "dateformat";
 import { ScopeProgress } from "./parallel";
 
-interface ProgressTrackerOptions {
+export interface ProgressTrackerOptions {
   start: number;
   max?: number;
   name?: string;
+  onUpdate?: (tracker: ProgressTracker) => void;
 }
 
 interface ProgressTrackerStatus {
@@ -20,42 +21,51 @@ interface ProgressTrackerStatus {
 }
 
 export class ProgressTracker {
-  #startDate = new Date();
-  #finished = false;
-  #current: number;
+  startDate = new Date();
+  finished = false;
+  current: number;
 
   constructor(private options: ProgressTrackerOptions) {
-    this.#current = options.start;
+    this.current = options.start;
+    if (this.options.onUpdate) {
+      this.options.onUpdate(this);
+    }
   }
 
   increase(value?: number) {
-    this.#current += value ?? 1;
+    this.current += value ?? 1;
+    if (this.options.onUpdate) {
+      this.options.onUpdate(this);
+    }
   }
 
   finish() {
-    this.#finished = true;
+    this.finished = true;
+    if (this.options.onUpdate) {
+      this.options.onUpdate(this);
+    }
   }
 
   get status(): ProgressTrackerStatus {
-    const elapsed = (new Date().getTime() - this.#startDate.getTime()) * 0.001;
+    const elapsed = (new Date().getTime() - this.startDate.getTime()) * 0.001;
     const totalItems = this.options.max
       ? this.options.max - this.options.start
       : undefined;
     const percentage =
       this.options.max && totalItems
-        ? (this.#current - this.options.start) / totalItems
+        ? (this.current - this.options.start) / totalItems
         : undefined;
     const eta = percentage
       ? (elapsed / percentage) * (1 - percentage)
       : undefined;
-    const perSecond = (this.#current - this.options.start) / elapsed;
+    const perSecond = (this.current - this.options.start) / elapsed;
 
     return {
       name: this.options.name,
-      finished: this.#finished,
+      finished: this.finished,
       start: this.options.start,
       max: this.options.max,
-      current: this.#current,
+      current: this.current,
       percentage,
       eta,
       elapsed,

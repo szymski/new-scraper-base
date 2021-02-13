@@ -1,4 +1,10 @@
-import AbortController from "abort-controller"
+import AbortController from "abort-controller";
+import {
+  Feature,
+  FeatureConfiguration,
+  FeatureContext,
+  mapFeatureToContext,
+} from "../feature";
 import { Robot } from "../robot";
 import { ScopeCallbacks } from "./types";
 
@@ -22,6 +28,10 @@ export class ScopeContext {
     Object.assign(this, data ?? {});
   }
 
+  feature<T extends Feature>(Feature: new () => T): FeatureContext<T> {
+    return this.root.feature(Feature);
+  }
+
   set root(value: RootScopeContext) {
     this.#root = value;
   }
@@ -37,13 +47,15 @@ export class ScopeContext {
   }
 
   // TODO: Come up with a better solution than recursive call
-  protected static getNonLocalRecursively<T>(scope: ScopeContext, key: symbol | string): T | undefined {
+  protected static getNonLocalRecursively<T>(
+    scope: ScopeContext,
+    key: symbol | string
+  ): T | undefined {
     const data = scope.data[key];
-    if(data === undefined) {
-      if(scope.parent) {
+    if (data === undefined) {
+      if (scope.parent) {
         return ScopeContext.getNonLocalRecursively(scope.parent, key);
-      }
-      else {
+      } else {
         return undefined;
       }
     }
@@ -81,6 +93,16 @@ export class RootScopeContext extends ScopeContext {
   };
   readonly abortController: AbortController;
 
+  readonly featureConfigurations = new Map<
+    new () => Feature,
+    FeatureConfiguration
+  >();
+
+  readonly featureContexts = new Map<
+    new () => Feature,
+    FeatureContext<any>
+  >();
+
   protected constructor(data: Partial<RootScopeContext>) {
     super();
     Object.assign(this, data);
@@ -90,6 +112,26 @@ export class RootScopeContext extends ScopeContext {
 
   get root() {
     return this;
+  }
+
+  feature<T extends Feature>(Feature: { new (): T }): FeatureContext<T> {
+    let context = this.featureContexts.get(Feature);
+    if(!context) {
+      context = mapFeatureToContext(Feature);
+      this.featureContexts.set(Feature, context);
+    }
+    return context;
+  }
+
+  getFeatureConfiguration<T extends Feature>(
+    Feature: new () => T
+  ): FeatureConfiguration {
+    let config = this.featureConfigurations.get(Feature);
+    if (!config) {
+      config = new FeatureConfiguration();
+      this.featureConfigurations.set(Feature, config);
+    }
+    return config;
   }
 
   static create(name?: string, robot?: Robot) {
