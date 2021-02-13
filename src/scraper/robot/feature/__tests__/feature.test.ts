@@ -1,4 +1,4 @@
-import { Feature } from "../feature";
+import { Feature } from "../feature-class";
 
 describe("Feature tests", () => {
   test("Should construct a single instance and always return it", () => {

@@ -1,5 +1,5 @@
-import { getCurrentScope } from "../scope";
-import { Feature } from "./feature";
+import { getCurrentScope } from "../../scope";
+import { Feature } from "../feature-class";
 
 export class FeatureCallbackDescriptor<
   TCallbackFunc extends (...params: any) => any
@@ -10,9 +10,7 @@ export class FeatureCallbackDescriptor<
 
   invoke(...params: Parameters<TCallbackFunc>): void {
     const scope = getCurrentScope();
-    const config = scope.root.getFeatureConfiguration(
-      this.FeatureConstructor
-    );
+    const config = scope.root.getFeatureConfiguration(this.FeatureConstructor);
     config.invokeCallback(this.id, scope, ...(params as any));
   }
 }

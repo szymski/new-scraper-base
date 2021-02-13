@@ -1,7 +1,6 @@
-import {mockScope} from "../../__tests__/helpers";
-import {Feature} from "../feature";
-import {FeatureCallbackDescriptor} from "../callback-descriptor";
-
+import { mockScope } from "../../../test-helpers";
+import { Feature } from "../../feature-class";
+import { FeatureCallbackDescriptor } from "../callback-descriptor";
 
 describe("Feature callback descriptor tests", () => {
   test("Should invoke callback", () => {
@@ -21,4 +20,3 @@ describe("Feature callback descriptor tests", () => {
     });
   });
 });
-

@@ -1,4 +1,4 @@
-import { FeatureCallbackDescriptor } from "./callback-descriptor";
+import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 

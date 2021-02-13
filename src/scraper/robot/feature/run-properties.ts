@@ -1,7 +1,7 @@
 import { ScopeContext } from "../scope/scope-context";
-import { FeatureCallbackDescriptor } from "./callback-descriptor";
 import { FeatureConfiguration } from "./configuration";
-import { Feature } from "./feature";
+import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
+import { Feature } from "./feature-class";
 
 export interface FeatureRunProperties<T extends Feature> {
   callbacks: FeatureCallbacks<T>;

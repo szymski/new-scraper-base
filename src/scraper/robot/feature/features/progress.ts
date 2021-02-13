@@ -1,6 +1,9 @@
-import { ProgressTracker, ProgressTrackerOptions } from "../progress-tracker";
-import { ScopeContext } from "../scope/scope-context";
-import { Feature } from "./feature";
+import {
+  ProgressTracker,
+  ProgressTrackerOptions,
+} from "../../progress-tracker";
+import { ScopeContext } from "../../scope/scope-context";
+import { Feature } from "../feature-class";
 
 export class ProgressFeature extends Feature {
   create(

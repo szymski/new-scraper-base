@@ -1,7 +1,7 @@
 import { getCurrentScope } from "../scope";
 import { ScopeContext } from "../scope/scope-context";
-import { FeatureCallbackDescriptor } from "./callback-descriptor";
-import { Feature } from "./feature";
+import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
+import { Feature } from "./feature-class";
 
 export type FeatureContext<T extends Feature> = {
   [K in keyof T as ExcludeNonContextFields<
@@ -44,11 +44,11 @@ export function mapFeatureToContext<TFeature extends Feature>(
   const obj: Record<any, any> = {};
   for (const key of Object.getOwnPropertyNames(featurePrototype)) {
     const value = featurePrototype[key];
-    // if (typeof value === "function") {
-    obj[key] = (...params: any[]) => {
-      return value.call(instance, getCurrentScope(), ...params);
-    };
-    // }
+    if (typeof value === "function") {
+      obj[key] = (...params: any[]) => {
+        return value.call(instance, getCurrentScope(), ...params);
+      };
+    }
   }
   // TODO
 

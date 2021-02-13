@@ -1,4 +1,4 @@
-import { Feature } from "./feature/feature";
+import { Feature } from "./feature";
 import { FeatureRunProperties } from "./feature/run-properties";
 import { RootScopeContext } from "./scope/scope-context";
 

@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "async_hooks";
 import { Logger } from "../util/logger";
-import { Feature } from "./feature/feature";
+import { Feature } from "./feature";
 import {
   FeatureRunProperties,
   mapFeatureToRunProperties,
@@ -112,7 +112,10 @@ export function createEntrypointRun<TData, TReturn = any>(
     feature<TFeature extends Feature>(
       Feature: new () => TFeature
     ): FeatureRunProperties<TFeature> {
-      return mapFeatureToRunProperties(Feature, this.rootScope.getFeatureConfiguration(Feature));
+      return mapFeatureToRunProperties(
+        Feature,
+        this.rootScope.getFeatureConfiguration(Feature)
+      );
     },
   };
 

@@ -1,7 +1,5 @@
 import AbortController from "abort-controller";
-import { FeatureConfiguration } from "../feature/configuration";
-import { Feature } from "../feature/feature";
-import { FeatureContext, mapFeatureToContext } from "../feature/feature-context";
+import { Feature,FeatureConfiguration,FeatureContext,mapFeatureToContext } from "../feature";
 import { Robot } from "../robot";
 import { ScopeCallbacks } from "./types";
 

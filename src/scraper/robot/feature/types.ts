@@ -1,1 +1,0 @@
-interface ScopeVariable<T> {}

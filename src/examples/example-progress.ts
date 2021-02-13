@@ -17,7 +17,7 @@
  */
 
 import { Entrypoint, Robot } from "../scraper/robot";
-import { ProgressFeature } from "../scraper/robot/feature/progress";
+import { ProgressFeature } from "../scraper/robot/feature/features/progress";
 import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { getCurrentScope, Scope } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";

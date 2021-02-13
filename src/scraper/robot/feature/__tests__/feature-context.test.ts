@@ -1,6 +1,6 @@
 import { ScopeContext } from "../../scope/scope-context";
-import { mockScope } from "../../__tests__/helpers";
-import { Feature } from "../feature";
+import { mockScope } from "../../test-helpers";
+import { Feature } from "../feature-class";
 import { mapFeatureToContext } from "../feature-context";
 
 describe("Feature context tests", () => {

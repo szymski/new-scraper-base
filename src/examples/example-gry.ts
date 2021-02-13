@@ -6,6 +6,7 @@ import { Parallel, parallel } from "../scraper/robot/parallel";
 import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
 import { getCurrentScope, Scope, ScopeParam } from "../scraper/robot/scope";
+import { ScopeContext } from "../scraper/robot/scope/scope-context";
 import { Logger } from "../scraper/util/logger";
 
 interface GameData {
@@ -56,15 +57,15 @@ class TestRobot extends Robot {
 
   @Scope("category")
   private async scrapCategory(@ScopeParam("url") url: string) {
-    // await parallel.while(1, async (page) => {
-    //   return await this.scrapCategoryPage(url, page);
-    // });
+    await parallel().countWhile(1, async (page) => {
+      return await this.scrapCategoryPage(url, page);
+    });
 
-    await parallel()
-      .setLimit(1)
-      .for(1, 16, async (page) => {
-        await this.scrapCategoryPage(url, page);
-      });
+    // await parallel()
+    //   .setLimit(1)
+    //   .for(1, 16, async (page) => {
+    //     await this.scrapCategoryPage(url, page);
+    //   });
 
     // for (let page = 1; page < 15; page++) {
     //   if (!(await this.scrapCategoryPage(url, page))) {
