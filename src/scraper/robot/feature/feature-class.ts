@@ -2,16 +2,19 @@ import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
+/**
+ * Base class for adding and managing functionalities of a scraper,
+ * separately from other modules.
+ */
 export abstract class Feature {
-  // abstract localScopeVariable<T>(key: symbol | string): ScopeVariable<T>;
+  private get selfConstructor() {
+    return Object.getPrototypeOf(this).constructor;
+  }
 
   createCallback<
     T extends (...params: any) => any
   >(): FeatureCallbackDescriptor<T> {
-    // TODO: This black magic here is not fancy
-    return new FeatureCallbackDescriptor<T>(
-      (this as any).__proto__.constructor
-    );
+    return new FeatureCallbackDescriptor<T>(this.selfConstructor);
   }
 
   static instances = new WeakMap<new () => Feature, Feature>();
