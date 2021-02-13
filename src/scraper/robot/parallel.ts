@@ -67,7 +67,7 @@ export class Parallel {
   async forEach<T>(elements: T[], fn: (element: T) => void) {
     const scope = getCurrentScope();
     const tracker = new ProgressTracker({
-      name: scope.executionName,
+      name: this.#uniqueId,
       start: 0,
       max: elements.length,
     });
@@ -94,7 +94,7 @@ export class Parallel {
   async for<T>(start: number, end: number, fn: (i: number) => void) {
     const scope = getCurrentScope();
     const tracker = new ProgressTracker({
-      name: scope.executionName,
+      name: this.#uniqueId,
       start: start,
       max: end,
     });
@@ -111,24 +111,38 @@ export class Parallel {
       });
   }
 
-  // /**
-  //  * Parallelize actions performed in a for loop, without known sequence length.
-  //  * The callback should return a boolean value which indicates if execution should be continued.
-  //  * @param elements Sequence of elements
-  //  * @param fn Function to run for each element
-  //  */
-  // async while<T>(start: number, end: number, fn: (i: number) => boolean) {
-  //   const scope = getCurrentScope();
-  //   const bar = Parallel.createBar(end - start, scope.executionName);
-  //   for (let i = start; ; i++) {
-  //     const shouldContinue = await fn(i);
-  //     // bar.tick();
-  //     if (!shouldContinue) {
-  //       break;
-  //     }
-  //   }
-  //   bar.terminate();
-  // }
+  /**
+   * Parallelize actions performed in a for loop, without known sequence length.
+   * The callback should return a boolean value which indicates if execution should be continued.
+   * @param elements Sequence of elements
+   * @param fn Function to run for each element
+   */
+  async countWhile<T>(start: number, fn: (i: number) => Promise<boolean>) {
+    const scope = getCurrentScope();
+    const tracker = new ProgressTracker({
+      name: this.#uniqueId,
+      start: start,
+    });
+
+    Parallel.assignProgress(scope, tracker);
+
+    // TODO: Implement concurrency for unknown sequence lengths
+    try {
+      for (let i = start; ; i++) {
+        const shouldContinue = await this.wrapElement<boolean>(
+          i,
+          tracker,
+          async () => await fn(i)
+        );
+        if (!shouldContinue) {
+          break;
+        }
+      }
+    } finally {
+      tracker.finish();
+      Parallel.finalizeProgress(scope);
+    }
+  }
 
   static getRootProgress(scope: ScopeContext) {
     return scope.root.get<ScopeProgress>(ScopeProgressDataKey);
@@ -212,18 +226,19 @@ export class Parallel {
     scope.set(ParallelCheckpointsRootDataKey, checkpoints);
   }
 
-  private async wrapElement(
+  private async wrapElement<T>(
     item: any,
     tracker: ProgressTracker,
-    fn: () => Promise<any>
+    fn: () => Promise<T>
   ) {
     const checkpointId = `${this.#uniqueId}[${JSON.stringify(item)}]`;
     const scope = getCurrentScope();
     scope.set(CheckpointUniqueIdDataKey, checkpointId);
-    await fn();
+    const result = await fn();
     scope.set(CheckpointUniqueIdDataKey, this.#uniqueId);
     tracker.increase();
     Parallel.markCheckpointAsFinished(scope, checkpointId);
+    return result;
   }
 }
 
