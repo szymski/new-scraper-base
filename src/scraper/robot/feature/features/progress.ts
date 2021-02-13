@@ -12,9 +12,13 @@ export class ProgressFeature extends Feature {
   ): ProgressTracker {
     return new ProgressTracker({
       ...options,
+      name: `${options.name || "progress"}[${this.progressId.value!++}]`,
       onUpdate: (tracker) => this.onProgress.invoke(tracker),
     });
   }
 
+  // TODO: Readonly modifier won't work
   onProgress = this.createCallback<(tracker: ProgressTracker) => void>();
+
+  progressId = this.createLocalScopeVariable<number>("ProgressId", () => 0);
 }
