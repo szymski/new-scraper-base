@@ -1,5 +1,5 @@
 import { Entrypoint, Robot } from "../scraper/robot";
-import { ProgressFeature } from "../scraper/robot/features/progress";
+import { ProgressFeature } from "../scraper/robot/feature/progress";
 import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { getCurrentScope, Scope } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
@@ -13,26 +13,26 @@ class TestRobot extends Robot {
   @Entrypoint()
   entry() {
     return this.entrypoint<{}>(async () => {
-      await this.exampleNoFeature();
+      await this.example();
     });
   }
 
-  @Scope()
-  async exampleNoFeature() {
-    const count = 30;
-
-    const tracker = new ProgressTracker({
-      start: 0,
-      max: count,
-    });
-    console.log(ProgressTracker.renderProgressbar(tracker));
-
-    for (let i = 0; i < count; i++) {
-      await sleep(100);
-      tracker.increase();
-      console.log(ProgressTracker.renderProgressbar(tracker));
-    }
-  }
+  // @Scope()
+  // async exampleNoFeature() {
+  //   const count = 30;
+  //
+  //   const tracker = new ProgressTracker({
+  //     start: 0,
+  //     max: count,
+  //   });
+  //   console.log(ProgressTracker.renderProgressbar(tracker));
+  //
+  //   for (let i = 0; i < count; i++) {
+  //     await sleep(100);
+  //     tracker.increase();
+  //     console.log(ProgressTracker.renderProgressbar(tracker));
+  //   }
+  // }
 
   @Scope()
   async example() {
@@ -40,8 +40,8 @@ class TestRobot extends Robot {
 
     const count = 30;
 
-    const feat = scope.feature(ProgressFeature);
-    const tracker = scope.feature(ProgressFeature).create({
+    const feature = scope.feature(ProgressFeature);
+    const tracker = feature.create({
       start: 0,
       max: count,
     });
@@ -59,7 +59,8 @@ const robot = new TestRobot();
 
 const run = robot.entry();
 
-run.feature(ProgressFeature).callbacks.onProgress = (tracker) => {
+run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
+  Logger.error(scope);
   Logger.warn(`Received feature callback with progress!`);
   Logger.warn(ProgressTracker.renderProgressbar(tracker));
 };

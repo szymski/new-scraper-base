@@ -1,4 +1,5 @@
-import { Feature, FeatureRunProperties } from "./features/progress";
+import { Feature } from "./feature/feature";
+import { FeatureRunProperties } from "./feature/run-properties";
 import { RootScopeContext } from "./scope/scope-context";
 
 export type RobotRunStatus = "initial" | "running" | "finished" | "cancelled";
