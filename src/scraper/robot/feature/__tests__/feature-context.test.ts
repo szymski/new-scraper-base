@@ -33,6 +33,8 @@ describe("Feature context tests", () => {
       }
 
       callback = this.createCallback<() => void>();
+
+      variable = this.createScopeVariable<string>("TestVariable");
     }
 
     test("Should not map descriptors", () => {
@@ -82,6 +84,16 @@ describe("Feature context tests", () => {
       mockScope(() => {
         expect(mapped).toHaveProperty("method5_nested_call");
         expect(mapped.method5_nested_call("hello")).toEqual("hello123");
+      });
+    });
+
+    test("Should map scope variables", () => {
+      const instance = Feature.getInstance(TestFeature);
+      const mapped = mapFeatureToContext(TestFeature);
+
+      mockScope(() => {
+        expect(mapped).toHaveProperty("variable");
+        expect(mapped.variable).toBe(instance.variable);
       });
     });
   });

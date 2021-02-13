@@ -1,4 +1,8 @@
-import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
+import { ScopeContext } from "../scope/scope-context";
+import {
+  FeatureCallbackDescriptor,
+  FeatureScopeVariableDescriptor,
+} from "./descriptors";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
@@ -15,6 +19,20 @@ export abstract class Feature {
     T extends (...params: any) => any
   >(): FeatureCallbackDescriptor<T> {
     return new FeatureCallbackDescriptor<T>(this.selfConstructor);
+  }
+
+  createScopeVariable<T>(
+    name?: string,
+    defaultInitializer?: (scope: ScopeContext) => T
+  ): FeatureScopeVariableDescriptor<T> {
+    return new FeatureScopeVariableDescriptor<T>(this.selfConstructor, false, name, defaultInitializer);
+  }
+
+  createLocalScopeVariable<T>(
+      name?: string,
+      defaultInitializer?: (scope: ScopeContext) => T
+  ): FeatureScopeVariableDescriptor<T> {
+    return new FeatureScopeVariableDescriptor<T>(this.selfConstructor, true, name, defaultInitializer);
   }
 
   static instances = new WeakMap<new () => Feature, Feature>();
