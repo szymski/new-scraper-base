@@ -85,4 +85,17 @@ describe("Feature context tests", () => {
       });
     });
   });
+
+  describe("Scope context", () => {
+    test("Should return the same mapped feature context instance in scope context", () => {
+      class TestFeature extends Feature {}
+
+      mockScope((scope) => {
+        const first = scope.feature(TestFeature);
+        const second = scope.feature(TestFeature);
+
+        expect(second).toBe(first);
+      });
+    });
+  });
 });

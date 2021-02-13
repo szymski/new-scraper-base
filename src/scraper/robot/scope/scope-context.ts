@@ -1,5 +1,10 @@
 import AbortController from "abort-controller";
-import { Feature,FeatureConfiguration,FeatureContext,mapFeatureToContext } from "../feature";
+import {
+  Feature,
+  FeatureConfiguration,
+  FeatureContext,
+  mapFeatureToContext,
+} from "../feature";
 import { Robot } from "../robot";
 import { ScopeCallbacks } from "./types";
 
@@ -24,8 +29,7 @@ export class ScopeContext {
   }
 
   feature<T extends Feature>(Feature: new () => T): FeatureContext<T> {
-    // TODO: Don't create a new instance every time
-    return mapFeatureToContext(Feature);
+    return this.root.feature(Feature);
   }
 
   set root(value: RootScopeContext) {
@@ -94,6 +98,11 @@ export class RootScopeContext extends ScopeContext {
     FeatureConfiguration
   >();
 
+  readonly featureContexts = new Map<
+    new () => Feature,
+    FeatureContext<any>
+  >();
+
   protected constructor(data: Partial<RootScopeContext>) {
     super();
     Object.assign(this, data);
@@ -103,6 +112,15 @@ export class RootScopeContext extends ScopeContext {
 
   get root() {
     return this;
+  }
+
+  feature<T extends Feature>(Feature: { new (): T }): FeatureContext<T> {
+    let context = this.featureContexts.get(Feature);
+    if(!context) {
+      context = mapFeatureToContext(Feature);
+      this.featureContexts.set(Feature, context);
+    }
+    return context;
   }
 
   getFeatureConfiguration<T extends Feature>(

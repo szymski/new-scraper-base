@@ -44,6 +44,7 @@ export function mapFeatureToContext<TFeature extends Feature>(
   const obj: Record<any, any> = {};
   for (const key of Object.getOwnPropertyNames(featurePrototype)) {
     const value = featurePrototype[key];
+
     if (typeof value === "function") {
       obj[key] = (...params: any[]) => {
         return value.call(instance, getCurrentScope(), ...params);
