@@ -1,10 +1,10 @@
 import { AsyncLocalStorage } from "async_hooks";
 import { Logger } from "../util/logger";
-import { Feature } from "./feature";
 import {
+  Feature,
   FeatureRunProperties,
   mapFeatureToRunProperties,
-} from "./feature/run-properties";
+} from "./feature";
 import {
   addClassMetadata,
   ClassMetadataKeys,
@@ -71,6 +71,11 @@ export function createEntrypointRun<TData, TReturn = any>(
     }
   };
 
+  const featureProperties = new Map<
+    new () => Feature,
+    FeatureRunProperties<any>
+  >();
+
   const start = async () => {
     if (run.status !== "initial") {
       throw new Error(
@@ -112,10 +117,15 @@ export function createEntrypointRun<TData, TReturn = any>(
     feature<TFeature extends Feature>(
       Feature: new () => TFeature
     ): FeatureRunProperties<TFeature> {
-      return mapFeatureToRunProperties(
-        Feature,
-        this.rootScope.getFeatureConfiguration(Feature)
-      );
+      let properties = featureProperties.get(Feature);
+      if(!properties) {
+        properties = mapFeatureToRunProperties(
+            Feature,
+            this.rootScope.getFeatureConfiguration(Feature)
+        );
+        featureProperties.set(Feature, properties);
+      }
+      return properties;
     },
   };
 

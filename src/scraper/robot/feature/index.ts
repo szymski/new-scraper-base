@@ -4,4 +4,4 @@ export { FeatureContext, mapFeatureToContext } from "./feature-context";
 export {
   FeatureRunProperties,
   mapFeatureToRunProperties,
-} from "./run-properties";
+} from "./feature-run-properties";
