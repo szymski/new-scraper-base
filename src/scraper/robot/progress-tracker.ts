@@ -27,6 +27,9 @@ export class ProgressTracker {
 
   constructor(private options: ProgressTrackerOptions) {
     this.current = options.start;
+    if (this.options.onUpdate) {
+      this.options.onUpdate(this);
+    }
   }
 
   increase(value?: number) {

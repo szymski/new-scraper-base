@@ -26,6 +26,7 @@ export class ScopeContext {
   }
 
   feature<T extends Feature>(Feature: new () => T): FeatureContext<T> {
+    // TODO: Don't create a new instance every time
     return mapFeatureToContext(Feature);
   }
 
