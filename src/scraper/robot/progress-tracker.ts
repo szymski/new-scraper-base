@@ -1,4 +1,5 @@
 import dateFormat from "dateformat";
+import { TreeNode } from "./feature/scope-data-tree-descriptor";
 import { ScopeProgress } from "./parallel";
 
 export interface ProgressTrackerOptions {
@@ -79,6 +80,23 @@ export class ProgressTracker {
     for (const child of progress.children) {
       str += ProgressTracker.renderProgressTree(child, depth + 1);
     }
+    return str;
+  }
+
+  static renderProgressTreeNew(node: TreeNode<ProgressTracker>, depth = 0) {
+    let str = "";
+
+    if (node.data) {
+      str += `${"\t".repeat(depth)}${
+        node.data ? this.renderProgressbar(node.data) : "NULL"
+      }\n`;
+      depth++;
+    }
+
+    for (const child of node.children) {
+      str += ProgressTracker.renderProgressTreeNew(child, depth);
+    }
+
     return str;
   }
 

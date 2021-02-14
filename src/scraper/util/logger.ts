@@ -16,7 +16,7 @@ const logLevelColor: Record<LogLevel, (str: string) => string> = {
 };
 
 export class Logger {
-  log(level: LogLevel, message: any) {
+  log(level: LogLevel, message: any, color?: colors.Color) {
     const scope = getCurrentScopeNoFail();
     let result = "";
 
@@ -25,7 +25,9 @@ export class Logger {
     if (scope) {
       result += colors.grey(` ${scope?.fullExecutionName ?? "global"}:`);
     }
-    result += logLevelColor[level](` ${this.formatMessage(message)}`);
+    result += (color ?? logLevelColor[level])(
+      ` ${this.formatMessage(message)}`
+    );
 
     console.log(result);
   }
@@ -56,6 +58,10 @@ export class Logger {
 
   static verbose(message: any) {
     this.instance.log(LogLevel.Verbose, message);
+  }
+
+  static color(color: colors.Color, message: any) {
+    this.instance.log(LogLevel.Info, message, color);
   }
 
   static instance = new Logger();

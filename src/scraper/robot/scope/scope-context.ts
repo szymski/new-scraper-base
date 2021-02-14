@@ -46,6 +46,10 @@ export class ScopeContext {
       : ScopeContext.getNonLocalRecursively<T>(this, key);
   }
 
+  getLocal<T>(key: symbol | string): T | undefined {
+    return this.localData[key];
+  }
+
   // TODO: Come up with a better solution than recursive call
   protected static getNonLocalRecursively<T>(
     scope: ScopeContext,
@@ -63,6 +67,7 @@ export class ScopeContext {
   }
 
   set<T>(key: symbol | string, value: T) {
+    this.localData[key] = value;
     return (this.data[key] = value);
   }
 

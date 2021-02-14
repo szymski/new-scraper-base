@@ -16,6 +16,7 @@
  *  New {@link FeatureContext} instance is created on each entrypoint.
  */
 
+import colors from "colors";
 import { Entrypoint, Robot } from "../scraper/robot";
 import { ProgressFeature } from "../scraper/robot/feature/features/progress";
 import { ProgressTracker } from "../scraper/robot/progress-tracker";
@@ -53,9 +54,39 @@ class ProgressExampleRobot extends Robot {
 
     for (let i = 0; i < count; i++) {
       await sleep(100);
+
+      await this.another();
+
       // We increase progress, which invokes onProgress callback
       tracker.increase();
     }
+
+    tracker.finish();
+  }
+
+  @Scope()
+  async another() {
+    const scope = getCurrentScope();
+
+    const count = 20;
+
+    // Here we grab context of a feature, for this we pass the feature's class constructor
+    const feature = scope.feature(ProgressFeature);
+
+    // We call progress feature's method to create a tracker
+    // ProgressFeature's onProgress callback is invoked here
+    const tracker = feature.create({
+      start: 0,
+      max: count,
+    });
+
+    for (let i = 0; i < count; i++) {
+      await sleep(200);
+      // We increase progress, which invokes onProgress callback
+      tracker.increase();
+    }
+
+    tracker.finish();
   }
 }
 
@@ -66,7 +97,15 @@ const run = robot.entry();
 // We get run properties of a feature and assign a callback to it
 // Callback invocation source (current scope) is always passed as the last parameter
 run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
-  Logger.warn(ProgressTracker.renderProgressbar(tracker));
+  // Logger.warn(ProgressTracker.renderProgressbar(tracker));
+
+  const rootNode = scope.root
+    .feature(ProgressFeature)
+    .trackerTree.getRootNode();
+  Logger.color(
+    colors.green,
+    "\n" + ProgressTracker.renderProgressTreeNew(rootNode)
+  );
 };
 
 run.start().then();

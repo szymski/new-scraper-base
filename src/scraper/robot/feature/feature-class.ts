@@ -3,6 +3,7 @@ import {
   FeatureCallbackDescriptor,
   FeatureScopeVariableDescriptor,
 } from "./descriptors";
+import { ScopeDataTree } from "./scope-data-tree-descriptor";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
@@ -45,7 +46,9 @@ export abstract class Feature {
     );
   }
 
-  createScopeDataTree<T>(name?: string) {}
+  createScopeDataTree<T>(name?: string) {
+    return new ScopeDataTree<T>(name);
+  }
 
   static instances = new WeakMap<new () => Feature, Feature>();
 

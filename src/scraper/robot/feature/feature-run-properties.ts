@@ -23,15 +23,10 @@ type FeatureCallbacks<TFeature extends Feature> = {
 type WithScopeAsLastParameter<T extends Function> = T extends (
   ...params: infer Params
 ) => infer Return
-  ? (...params: Append<Params, ScopeLastParamTuple>) => Return
+  ? (...params: [...params: Params, scope: ScopeContext]) => Return
   : never;
 
-type ScopeLastParamTuple = [scope: ScopeContext];
-
-// Temporary workaround for TypeScript named tuple bug. Merges two named tuples.
-type Append<A, B> = A extends [...infer Params]
-  ? [...Params, ...(B extends [...infer Params2] ? Params2 : [])]
-  : never;
+type A = WithScopeAsLastParameter<(first: number, second: string) => void>;
 
 export function mapFeatureToRunProperties<TFeature extends Feature>(
   FeatureConstructor: new () => TFeature,
