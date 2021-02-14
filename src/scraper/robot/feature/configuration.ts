@@ -1,5 +1,5 @@
 import { Logger } from "../../util/logger";
-import {ScopeContext} from "../scope/scope-context";
+import { ScopeContext } from "../scope/scope-context";
 
 /**
  * Feature configuration is a per-root-scope container for feature related

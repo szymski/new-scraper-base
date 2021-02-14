@@ -1,11 +1,10 @@
 import { AbortSignal } from "abort-controller";
 import { CookieJar } from "tough-cookie";
 import {
-HttpMethod,
-HttpRequestBodyType,
-HttpRequestPerformerResponseType
+  HttpMethod,
+  HttpRequestBodyType,
+  HttpRequestPerformerResponseType,
 } from "./http-client";
-
 
 export enum HttpRequestError {
   Timeout = "timeout",

@@ -6,7 +6,9 @@ import { ResponseInterceptor } from "./interfaces";
  * Can be used to test request retrying interceptors.
  * @param failRate Fraction of the requests which should fail (0-1).
  */
-export const randomFailInterceptor = (failRate: number): ResponseInterceptor => ({
+export const randomFailInterceptor = (
+  failRate: number
+): ResponseInterceptor => ({
   interceptResponse: async () => {
     if (Math.random() < failRate) {
       return {

@@ -1,5 +1,5 @@
+import { ScopeContext } from "../../scope/scope-context";
 import { FeatureConfiguration } from "../configuration";
-import {ScopeContext} from "../../scope/scope-context";
 
 describe("Feature configuration tests", () => {
   describe("Callbacks", () => {

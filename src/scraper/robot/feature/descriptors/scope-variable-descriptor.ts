@@ -35,10 +35,10 @@ export class FeatureScopeVariableDescriptor<T> {
 
   reset() {
     let value = undefined;
-    if(this.defaultInitializer) {
+    if (this.defaultInitializer) {
       value = this.defaultInitializer(getCurrentScope());
     }
     this.value = value;
     return value;
-  };
+  }
 }

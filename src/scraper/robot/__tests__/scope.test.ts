@@ -24,18 +24,16 @@ describe("Scope tests", () => {
       await B();
     }, "A");
 
-    await runWithInitialScope(
-      async () => {
-        await A();
+    await runWithInitialScope(async () => {
+      await A();
 
-        expect(scopeNames).toEqual([
-          "ROOT.A",
-          "ROOT.A.B",
-          "ROOT.A.B.C",
-          "ROOT.A.B",
-        ]);
-      }
-    );
+      expect(scopeNames).toEqual([
+        "ROOT.A",
+        "ROOT.A.B",
+        "ROOT.A.B.C",
+        "ROOT.A.B",
+      ]);
+    });
   });
 
   test("Should return proper scopes in a race condition", async () => {
@@ -59,20 +57,18 @@ describe("Scope tests", () => {
       await F2();
     }, "F3");
 
-    await runWithInitialScope(
-      async () => {
-        await Promise.all([F1(), F2(), F3()]);
+    await runWithInitialScope(async () => {
+      await Promise.all([F1(), F2(), F3()]);
 
-        expect(scopeNames).toEqual([
-          "ROOT.F1",
-          "ROOT.F2",
-          "ROOT.F2",
-          "ROOT.F3.F2",
-          "ROOT.F1",
-          "ROOT.F3.F2",
-        ]);
-      }
-    );
+      expect(scopeNames).toEqual([
+        "ROOT.F1",
+        "ROOT.F2",
+        "ROOT.F2",
+        "ROOT.F3.F2",
+        "ROOT.F1",
+        "ROOT.F3.F2",
+      ]);
+    });
   });
 
   test("Should format execution name using parameters", async () => {
@@ -90,11 +86,9 @@ describe("Scope tests", () => {
 
     const robot = new Robot();
 
-    await runWithInitialScope(
-      async () => {
-        await robot.fn(123, "str");
-        expect(scopeNames).toEqual([`ROOT.fn(param1=123,param2="str")`]);
-      }
-    );
+    await runWithInitialScope(async () => {
+      await robot.fn(123, "str");
+      expect(scopeNames).toEqual([`ROOT.fn(param1=123,param2="str")`]);
+    });
   });
 });

@@ -25,15 +25,27 @@ export abstract class Feature {
     name?: string,
     defaultInitializer?: (scope: ScopeContext) => T
   ): FeatureScopeVariableDescriptor<T> {
-    return new FeatureScopeVariableDescriptor<T>(this.selfConstructor, false, name, defaultInitializer);
+    return new FeatureScopeVariableDescriptor<T>(
+      this.selfConstructor,
+      false,
+      name,
+      defaultInitializer
+    );
   }
 
   createLocalScopeVariable<T>(
-      name?: string,
-      defaultInitializer?: (scope: ScopeContext) => T
+    name?: string,
+    defaultInitializer?: (scope: ScopeContext) => T
   ): FeatureScopeVariableDescriptor<T> {
-    return new FeatureScopeVariableDescriptor<T>(this.selfConstructor, true, name, defaultInitializer);
+    return new FeatureScopeVariableDescriptor<T>(
+      this.selfConstructor,
+      true,
+      name,
+      defaultInitializer
+    );
   }
+
+  createScopeDataTree<T>(name?: string) {}
 
   static instances = new WeakMap<new () => Feature, Feature>();
 

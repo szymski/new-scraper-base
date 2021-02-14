@@ -118,10 +118,10 @@ export function createEntrypointRun<TData, TReturn = any>(
       Feature: new () => TFeature
     ): FeatureRunProperties<TFeature> {
       let properties = featureProperties.get(Feature);
-      if(!properties) {
+      if (!properties) {
         properties = mapFeatureToRunProperties(
-            Feature,
-            this.rootScope.getFeatureConfiguration(Feature)
+          Feature,
+          this.rootScope.getFeatureConfiguration(Feature)
         );
         featureProperties.set(Feature, properties);
       }

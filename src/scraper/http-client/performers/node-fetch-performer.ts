@@ -5,7 +5,6 @@ import {
   HttpRequestPerformInput,
   HttpRequestPerformOutput,
 } from "../http-request-performer";
-import {Logger} from "../../util/logger";
 
 const TYPE_REQUEST_TIMEOUT = "request-timeout";
 const TYPE_SYSTEM = "system";
@@ -79,13 +78,12 @@ export class NodeFetchPerformer implements HttpRequestPerformer {
             errorMessage: e.message,
           };
         }
-      }
-      else if(e.type ===  TYPE_ABORTED) {
+      } else if (e.type === TYPE_ABORTED) {
         return {
           success: false,
           errorCode: HttpRequestError.Aborted,
           errorMessage: "Aborted",
-        }
+        };
       }
       console.log(e);
       throw e;

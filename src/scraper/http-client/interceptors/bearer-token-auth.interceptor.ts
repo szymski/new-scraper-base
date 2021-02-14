@@ -1,6 +1,8 @@
 import { RequestInterceptor } from "./interfaces";
 
-export const bearerTokenAuthInterceptor = (token: string): RequestInterceptor => {
+export const bearerTokenAuthInterceptor = (
+  token: string
+): RequestInterceptor => {
   const headerValue = `Bearer ${token}`;
 
   return {

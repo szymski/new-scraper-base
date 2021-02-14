@@ -1,8 +1,8 @@
 import { getCurrentScope } from "../scope";
 import { ScopeContext } from "../scope/scope-context";
+import { FeatureScopeVariableDescriptor } from "./descriptors";
 import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
 import { Feature } from "./feature-class";
-import {FeatureScopeVariableDescriptor} from "./descriptors";
 
 export type FeatureContext<T extends Feature> = {
   [K in keyof T as ExcludeNonContextFields<
@@ -55,8 +55,8 @@ export function mapFeatureToContext<TFeature extends Feature>(
     }
   }
 
-  for(const [key, value] of Object.entries(instance)) {
-    if(value instanceof FeatureScopeVariableDescriptor) {
+  for (const [key, value] of Object.entries(instance)) {
+    if (value instanceof FeatureScopeVariableDescriptor) {
       obj[key] = value;
     }
   }

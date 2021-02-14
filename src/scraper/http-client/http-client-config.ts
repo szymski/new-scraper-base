@@ -1,5 +1,8 @@
 import { Cookie, CookieJar } from "tough-cookie";
-import { isRequestInterceptorObject, isResponseInterceptorObject } from "./interceptors/helpers";
+import {
+  isRequestInterceptorObject,
+  isResponseInterceptorObject,
+} from "./interceptors/helpers";
 import {
   InterceptorLike,
   RequestInterceptorFunction,
@@ -65,25 +68,29 @@ export class HttpClientConfig {
     },
     requestInterceptor: (interceptor: RequestInterceptorLike) => {
       this.interceptors.request.push(
-        isRequestInterceptorObject(interceptor) ? interceptor.interceptRequest : interceptor
+        isRequestInterceptorObject(interceptor)
+          ? interceptor.interceptRequest
+          : interceptor
       );
       return this;
     },
     responseInterceptor: (interceptor: ResponseInterceptorLike) => {
       this.interceptors.response.push(
-        isResponseInterceptorObject(interceptor) ? interceptor.interceptResponse : interceptor
+        isResponseInterceptorObject(interceptor)
+          ? interceptor.interceptResponse
+          : interceptor
       );
       return this;
     },
     interceptor: (interceptor: InterceptorLike) => {
-      if(isRequestInterceptorObject(interceptor)) {
+      if (isRequestInterceptorObject(interceptor)) {
         this.interceptors.request.push(interceptor.interceptRequest);
       }
-      if(isResponseInterceptorObject(interceptor)) {
+      if (isResponseInterceptorObject(interceptor)) {
         this.interceptors.response.push(interceptor.interceptResponse);
       }
       return this;
-    }
+    },
   };
 
   clone(): HttpClientConfig {
@@ -98,9 +105,17 @@ export class HttpClientConfig {
       result.baseUrl = config.baseUrl ?? result.baseUrl;
       result.headers = { ...result.headers, ...config.headers };
       // TODO: Concat cookies
-      config.urlParams.forEach((value, key) => result.urlParams.set(key, value));
-      result.interceptors.request = [...result.interceptors.request, ...config.interceptors.request];
-      result.interceptors.response = [...result.interceptors.response, ...config.interceptors.response];
+      config.urlParams.forEach((value, key) =>
+        result.urlParams.set(key, value)
+      );
+      result.interceptors.request = [
+        ...result.interceptors.request,
+        ...config.interceptors.request,
+      ];
+      result.interceptors.response = [
+        ...result.interceptors.response,
+        ...config.interceptors.response,
+      ];
     }
     return result;
   }

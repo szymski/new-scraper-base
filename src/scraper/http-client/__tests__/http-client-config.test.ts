@@ -1,5 +1,8 @@
-import {HttpClientConfig} from "../http-client-config";
-import {RequestInterceptorFunction, ResponseInterceptorFunction} from "../interceptors/interfaces";
+import { HttpClientConfig } from "../http-client-config";
+import {
+  RequestInterceptorFunction,
+  ResponseInterceptorFunction,
+} from "../interceptors/interfaces";
 
 describe("HttpClientConfig", () => {
   describe("Add params", () => {
@@ -34,8 +37,8 @@ describe("HttpClientConfig", () => {
 
     test("Should add url params", () => {
       config.add.urlParams({
-        "param1": 1,
-        "param2": "2"
+        param1: 1,
+        param2: "2",
       });
       expect(config.urlParams.get("param1")).toEqual("1");
       expect(config.urlParams.get("param2")).toEqual("2");
@@ -51,8 +54,14 @@ describe("HttpClientConfig", () => {
     config.add.header("h2", "test2");
     config.add.urlParam("p1", "param1");
     config.add.urlParam("p2", "param2");
-    const requestInterceptor: RequestInterceptorFunction = async (input, _) => {};
-    const responseInterceptor: ResponseInterceptorFunction = async (output, _) => {};
+    const requestInterceptor: RequestInterceptorFunction = async (
+      input,
+      _
+    ) => {};
+    const responseInterceptor: ResponseInterceptorFunction = async (
+      output,
+      _
+    ) => {};
     config.add.requestInterceptor(requestInterceptor);
     config.add.responseInterceptor(responseInterceptor);
 
@@ -76,10 +85,18 @@ describe("HttpClientConfig", () => {
   });
 
   test("Should concatenate 2 configs", () => {
-    const requestInterceptor1: RequestInterceptorFunction = async (input, _) => input;
-    const requestInterceptor2: RequestInterceptorFunction = async (input, _) => input;
-    const responseInterceptor1: ResponseInterceptorFunction = async (output, _) => output;
-    const responseInterceptor2: ResponseInterceptorFunction = async (output, _) => output;
+    const requestInterceptor1: RequestInterceptorFunction = async (input, _) =>
+      input;
+    const requestInterceptor2: RequestInterceptorFunction = async (input, _) =>
+      input;
+    const responseInterceptor1: ResponseInterceptorFunction = async (
+      output,
+      _
+    ) => output;
+    const responseInterceptor2: ResponseInterceptorFunction = async (
+      output,
+      _
+    ) => output;
 
     const config1: HttpClientConfig = new HttpClientConfig();
     config1.baseUrl = "base";
@@ -111,7 +128,13 @@ describe("HttpClientConfig", () => {
 
     // TODO: Cookies
 
-    expect(concatenated.interceptors.request).toEqual([requestInterceptor1, requestInterceptor2]);
-    expect(concatenated.interceptors.response).toEqual([responseInterceptor1, responseInterceptor2]);
+    expect(concatenated.interceptors.request).toEqual([
+      requestInterceptor1,
+      requestInterceptor2,
+    ]);
+    expect(concatenated.interceptors.response).toEqual([
+      responseInterceptor1,
+      responseInterceptor2,
+    ]);
   });
 });

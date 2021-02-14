@@ -6,7 +6,6 @@ import { Parallel, parallel } from "../scraper/robot/parallel";
 import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
 import { getCurrentScope, Scope, ScopeParam } from "../scraper/robot/scope";
-import { ScopeContext } from "../scraper/robot/scope/scope-context";
 import { Logger } from "../scraper/util/logger";
 
 interface GameData {

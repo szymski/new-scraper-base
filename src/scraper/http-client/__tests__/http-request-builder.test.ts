@@ -1,3 +1,4 @@
+import { AbortedException } from "../../exceptions";
 import {
   HttpAddressNotFoundException,
   HttpForbiddenException,
@@ -14,7 +15,6 @@ import {
   HttpRequestPerformOutput,
 } from "../http-request-performer";
 import { ResponseInterceptorFunction } from "../interceptors/interfaces";
-import {AbortedException} from "../../exceptions";
 
 describe("HttpRequestBuilder", () => {
   const mockPerformer = (data?: any): HttpRequestPerformer => {

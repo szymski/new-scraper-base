@@ -3,24 +3,33 @@ import Cheerio from "cheerio";
 import { AbortedException } from "../exceptions";
 import { getCurrentScopeNoFail } from "../robot/scope";
 import {
-HttpAddressNotFoundException,
-HttpBuilderAlreadyUsed,
-HttpException,
-HttpForbiddenException,
-HttpInvalidUrlException,
-HttpNotFoundException,
-HttpTimeoutException,
-HttpUnauthorizedException
+  HttpAddressNotFoundException,
+  HttpBuilderAlreadyUsed,
+  HttpException,
+  HttpForbiddenException,
+  HttpInvalidUrlException,
+  HttpNotFoundException,
+  HttpTimeoutException,
+  HttpUnauthorizedException,
 } from "./exceptions";
-import { HttpClient,HttpMethod,HttpRequestBodyType,HttpRequestPerformerResponseType } from "./http-client";
+import {
+  HttpClient,
+  HttpMethod,
+  HttpRequestBodyType,
+  HttpRequestPerformerResponseType,
+} from "./http-client";
 import { HttpClientConfig } from "./http-client-config";
 import {
-HttpRequestError,
-HttpRequestPerformInput,
-HttpRequestPerformOutput,
-HttpRequestPerformOutputSuccess
+  HttpRequestError,
+  HttpRequestPerformInput,
+  HttpRequestPerformOutput,
+  HttpRequestPerformOutputSuccess,
 } from "./http-request-performer";
-import { InterceptorLike,RequestInterceptorLike,ResponseInterceptorLike } from "./interceptors/interfaces";
+import {
+  InterceptorLike,
+  RequestInterceptorLike,
+  ResponseInterceptorLike,
+} from "./interceptors/interfaces";
 import { HttpRequestAdd } from "./interfaces";
 import CheerioAPI = cheerio.CheerioAPI;
 import Root = cheerio.Root;
@@ -192,11 +201,9 @@ export class HttpRequestBuilder {
         throw new HttpAddressNotFoundException(output.errorMessage);
       } else if (output.errorCode === HttpRequestError.PurposefulInterruption) {
         throw new HttpException("Request interrupted on purpose");
-      }
-      else if(output.errorCode === HttpRequestError.Aborted) {
+      } else if (output.errorCode === HttpRequestError.Aborted) {
         throw new AbortedException();
-      }
-      else {
+      } else {
         throw new HttpException(output.errorMessage);
       }
     }
