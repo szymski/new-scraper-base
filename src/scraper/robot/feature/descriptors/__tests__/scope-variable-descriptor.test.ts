@@ -1,3 +1,5 @@
+import { getCurrentScope } from "../../../scope";
+import { wrapWithScope } from "../../../scope/helpers";
 import { mockScope } from "../../../test-helpers";
 import { Feature } from "../../feature-class";
 
@@ -9,6 +11,7 @@ describe("Feature scope variable descriptor tests", () => {
       "WithInit",
       (scope) => `hello ${scope.name}`
     );
+    root = this.createScopeRootVariable<string>("RootTestVariable");
   }
 
   test("Should set non-local value", () => {
@@ -30,6 +33,23 @@ describe("Feature scope variable descriptor tests", () => {
       feature.local.value = "world";
 
       expect(spy).toBeCalledWith(feature.local.id, "world");
+    });
+  });
+
+  test("Should set root value", async () => {
+    await mockScope(async (scope1) => {
+      const fn = wrapWithScope(
+        async () => {
+          const scope2 = getCurrentScope();
+          const feature = scope2.feature(TestFeature);
+          feature.root.value = "hello root";
+          expect(scope1.get(feature.root.id)).toEqual("hello root");
+        },
+        "scope2",
+        []
+      );
+
+      await fn();
     });
   });
 

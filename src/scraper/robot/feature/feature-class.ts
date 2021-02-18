@@ -22,13 +22,25 @@ export abstract class Feature {
     return new FeatureCallbackDescriptor<T>(this.selfConstructor);
   }
 
+  createScopeRootVariable<T>(
+    name?: string,
+    defaultInitializer?: (scope: ScopeContext) => T
+  ): FeatureScopeVariableDescriptor<T> {
+    return new FeatureScopeVariableDescriptor<T>(
+      this.selfConstructor,
+      "root",
+      name,
+      defaultInitializer
+    );
+  }
+
   createScopeVariable<T>(
     name?: string,
     defaultInitializer?: (scope: ScopeContext) => T
   ): FeatureScopeVariableDescriptor<T> {
     return new FeatureScopeVariableDescriptor<T>(
       this.selfConstructor,
-      false,
+      "default",
       name,
       defaultInitializer
     );
@@ -40,7 +52,7 @@ export abstract class Feature {
   ): FeatureScopeVariableDescriptor<T> {
     return new FeatureScopeVariableDescriptor<T>(
       this.selfConstructor,
-      true,
+      "local",
       name,
       defaultInitializer
     );

@@ -2,12 +2,14 @@ import { getCurrentScope } from "../../scope";
 import { ScopeContext } from "../../scope/scope-context";
 import { Feature } from "../feature-class";
 
+export type ScopeVariableType = "default" | "local" | "root";
+
 export class FeatureScopeVariableDescriptor<T> {
   readonly id: symbol;
 
   constructor(
     private FeatureConstructor: new () => Feature,
-    readonly local: boolean,
+    readonly type: ScopeVariableType,
     readonly name?: string,
     readonly defaultInitializer?: (scope: ScopeContext) => T
   ) {
@@ -26,9 +28,13 @@ export class FeatureScopeVariableDescriptor<T> {
 
   set value(value: T | undefined) {
     const scope = getCurrentScope();
-    if (this.local) {
+    if (this.type === "local") {
       scope.setLocal(this.id, value);
-    } else {
+    }
+    else if(this.type === "root") {
+      scope.root.set(this.id, value);
+    }
+    else {
       scope.set(this.id, value);
     }
   }
