@@ -3,7 +3,7 @@ import {
   FeatureCallbackDescriptor,
   FeatureScopeVariableDescriptor,
 } from "./descriptors";
-import { ScopeDataTree } from "./scope-data-tree-descriptor";
+import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 

@@ -3,7 +3,7 @@ import { ScopeContext } from "../scope/scope-context";
 import { FeatureScopeVariableDescriptor } from "./descriptors";
 import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
 import { Feature } from "./feature-class";
-import { ScopeDataTree } from "./scope-data-tree-descriptor";
+import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
 
 export type FeatureContext<T extends Feature> = {
   [K in keyof T as ExcludeNonContextFields<

@@ -1,11 +1,13 @@
+import colors from "colors";
 import "reflect-metadata";
 import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
 import { Entrypoint } from "../scraper/robot/entrypoint";
+import { ProgressFeature } from "../scraper/robot/feature/features/progress";
 import { Parallel, parallel } from "../scraper/robot/parallel";
 import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
-import { getCurrentScope, Scope, ScopeParam } from "../scraper/robot/scope";
+import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
 
 interface GameData {
@@ -24,23 +26,6 @@ class TestRobot extends Robot {
   @Entrypoint()
   scrapAllCategories() {
     return this.entrypoint<{ game: GameData }>(async () => {
-      const scope = getCurrentScope();
-      setInterval(() => {
-        const progress = Parallel.getRootProgress(scope);
-        if (progress) {
-          console.log(ProgressTracker.renderProgressTree(progress));
-        }
-        // const remap = (progress: ScopeProgress): ScopeProgress => {
-        //   return {
-        //     parent: (progress.parent?.tracker.status
-        //       .name as any) as ScopeProgress,
-        //     tracker: (progress.tracker.status.name as any) as ProgressTracker,
-        //     children: progress.children.map((x) => remap(x)),
-        //   };
-        // };
-        // Logger.error(remap(progress!));
-      }, 1_000);
-
       const $ = await this.client.get("https://stare.e-gry.net/").cheerio();
       const categoryUrls = $("#menulewe .pod:nth-child(10) a")
         .toArray()
@@ -56,15 +41,15 @@ class TestRobot extends Robot {
 
   @Scope("category")
   private async scrapCategory(@ScopeParam("url") url: string) {
-    await parallel().countWhile(1, async (page) => {
-      return await this.scrapCategoryPage(url, page);
-    });
+    // await parallel().countWhile(1, async (page) => {
+    //   return await this.scrapCategoryPage(url, page);
+    // });
 
-    // await parallel()
-    //   .setLimit(1)
-    //   .for(1, 16, async (page) => {
-    //     await this.scrapCategoryPage(url, page);
-    //   });
+    await parallel()
+      .setLimit(4)
+      .for(1, 16, async (page) => {
+        await this.scrapCategoryPage(url, page);
+      });
 
     // for (let page = 1; page < 15; page++) {
     //   if (!(await this.scrapCategoryPage(url, page))) {
@@ -132,6 +117,16 @@ run.callbacks.onCancelled = () => {
       null,
       "\t"
     )
+  );
+};
+
+run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
+  const rootNode = scope.root
+    .feature(ProgressFeature)
+    .trackerTree.getRootNode();
+  Logger.color(
+    colors.green,
+    "\n" + ProgressTracker.renderProgressTree(rootNode)
   );
 };
 

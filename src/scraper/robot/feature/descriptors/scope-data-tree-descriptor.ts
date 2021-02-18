@@ -1,4 +1,4 @@
-import { getCurrentScope } from "../scope";
+import { getCurrentScope } from "../../scope";
 
 /*
   Root context is always present, value is optional.

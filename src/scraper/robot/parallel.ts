@@ -3,9 +3,9 @@ import { Logger } from "../util/logger";
 import { ProgressTracker } from "./progress-tracker";
 import { getCurrentScope } from "./scope";
 import { ScopeContext } from "./scope/scope-context";
+import {ProgressFeature} from "./feature/features/progress";
 
 const DATA_KEYS = {
-  ScopeProgress: Symbol("ScopeProgress"),
   ParallelIndex: Symbol("ParallelIndex"),
   ParallelCheckpointsRoot: Symbol("ParallelCheckpointsRoot"),
   CheckpointUniqueId: Symbol("CheckpointUniqueId"),
@@ -17,12 +17,6 @@ interface ParallelCheckpoints {
 
 interface ParallelCheckpoint {
   finished: boolean;
-}
-
-export interface ScopeProgress {
-  parent?: ScopeProgress;
-  tracker: ProgressTracker;
-  children: ScopeProgress[];
 }
 
 export class Parallel {
@@ -68,13 +62,12 @@ export class Parallel {
    */
   async forEach<T>(elements: T[], fn: (element: T) => void) {
     const scope = getCurrentScope();
-    const tracker = new ProgressTracker({
+
+    const tracker = scope.feature(ProgressFeature).create({
       name: this.#uniqueId,
       start: 0,
       max: elements.length,
     });
-
-    Parallel.assignProgress(scope, tracker);
 
     await async
       .eachLimit(elements, this.#taskLimit, async (item) => {
@@ -82,7 +75,6 @@ export class Parallel {
       })
       .finally(() => {
         tracker.finish();
-        Parallel.finalizeProgress(scope);
       });
   }
 
@@ -95,13 +87,12 @@ export class Parallel {
    */
   async for<T>(start: number, end: number, fn: (i: number) => void) {
     const scope = getCurrentScope();
-    const tracker = new ProgressTracker({
+
+    const tracker = scope.feature(ProgressFeature).create({
       name: this.#uniqueId,
       start: start,
       max: end,
     });
-
-    Parallel.assignProgress(scope, tracker);
 
     await async
       .timesLimit(end - start, this.#taskLimit, async (n) => {
@@ -109,7 +100,6 @@ export class Parallel {
       })
       .finally(() => {
         tracker.finish();
-        Parallel.finalizeProgress(scope);
       });
   }
 
@@ -120,12 +110,11 @@ export class Parallel {
    */
   async countWhile<T>(start: number, fn: (i: number) => Promise<boolean>) {
     const scope = getCurrentScope();
-    const tracker = new ProgressTracker({
+
+    const tracker = scope.feature(ProgressFeature).create({
       name: this.#uniqueId,
       start: start,
     });
-
-    Parallel.assignProgress(scope, tracker);
 
     // TODO: Implement concurrency for unknown sequence lengths
     try {
@@ -141,46 +130,13 @@ export class Parallel {
       }
     } finally {
       tracker.finish();
-      Parallel.finalizeProgress(scope);
     }
-  }
-
-  static getRootProgress(scope: ScopeContext) {
-    return scope.root.get<ScopeProgress>(DATA_KEYS.ScopeProgress);
   }
 
   static getAndIncreaseIndex(scope: ScopeContext): number {
     const number = scope.get<number>(DATA_KEYS.ParallelIndex) ?? 0;
     scope.setLocal(DATA_KEYS.ParallelIndex, number + 1);
     return number;
-  }
-
-  private static assignProgress(scope: ScopeContext, tracker: ProgressTracker) {
-    const currentTracker = scope.get<ScopeProgress>(DATA_KEYS.ScopeProgress);
-
-    const newProgress: ScopeProgress = {
-      parent: currentTracker,
-      tracker,
-      children: [],
-    };
-
-    if (currentTracker) {
-      currentTracker.children.push(newProgress);
-    }
-
-    scope.set(DATA_KEYS.ScopeProgress, newProgress);
-  }
-
-  private static finalizeProgress(scope: ScopeContext) {
-    const currentTracker = scope.get<ScopeProgress>(DATA_KEYS.ScopeProgress);
-
-    if (currentTracker?.parent) {
-      currentTracker.parent.children = currentTracker.parent.children.filter(
-        (progress) => progress !== currentTracker
-      );
-    }
-
-    scope.set(DATA_KEYS.ScopeProgress, currentTracker?.parent);
   }
 
   static getRootCheckpoints(scope: ScopeContext) {

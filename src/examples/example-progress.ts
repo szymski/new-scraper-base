@@ -104,7 +104,7 @@ run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
     .trackerTree.getRootNode();
   Logger.color(
     colors.green,
-    "\n" + ProgressTracker.renderProgressTreeNew(rootNode)
+    "\n" + ProgressTracker.renderProgressTree(rootNode)
   );
 };
 
