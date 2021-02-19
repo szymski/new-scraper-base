@@ -85,7 +85,12 @@ export function createEntrypointRun<TData, TReturn = any>(
 
     Logger.verbose(`Running entrypoint ${entrypointContext.name}`);
     run.status = "running";
-    const result = await runWithInitialScope(fn, scope);
+    const result = await runWithInitialScope(() => {
+      Feature.runCallback("onRootScopeEnter", scope);
+      const result = fn();
+      Feature.runCallback("onScopeExit", scope);
+      return result;
+    }, scope);
     run.status = "finished";
     Logger.verbose(`Robot action '${entrypointContext.name}' finished`);
     run.callbacks.onFinished();

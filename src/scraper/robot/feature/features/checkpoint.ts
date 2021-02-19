@@ -1,6 +1,6 @@
+import { Logger } from "../../../util/logger";
 import { ScopeContext } from "../../scope/scope-context";
 import { Feature } from "../feature-class";
-import {Logger} from "../../../util/logger";
 
 export class CheckpointContainer {
   constructor(
@@ -11,10 +11,9 @@ export class CheckpointContainer {
   async runForItem(item: any, fn: () => Promise<any>) {
     const checkpointItemId = `${this.uniqueId}[${JSON.stringify(item)}]`;
 
-    if(this.feature.isFinished(checkpointItemId)) {
+    if (this.feature.isFinished(checkpointItemId)) {
       Logger.warn(`Skipping ${checkpointItemId}`);
-    }
-    else {
+    } else {
       this.feature.checkpointUniqueId.value = checkpointItemId;
       const result = await fn();
       this.feature.checkpointUniqueId.value = this.uniqueId;
@@ -62,12 +61,13 @@ export class CheckpointFeature extends Feature {
 
   isFinished(itemUniqueId: string) {
     const checkpoints = this.checkpointList.value!;
-    return checkpoints.some(key => key === itemUniqueId);
+    return checkpoints.some((key) => key === itemUniqueId);
   }
 
   restoreCheckpoints(scope: ScopeContext, list: string[]) {
     Logger.verbose("Restoring checkpoint list");
     this.checkpointList.value = list;
+    // TODO
   }
 
   onCheckpointUpdate = this.createCallback<(checkpoints: string[]) => void>();

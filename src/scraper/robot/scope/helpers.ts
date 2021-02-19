@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { AbortedException } from "../../exceptions";
+import { Feature } from "../feature";
 import { ScopeParamMetadata } from "../metadata-helpers";
 import { RootScopeContext, ScopeContext } from "./scope-context";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
@@ -37,7 +38,8 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       formatScopeParams(params, paramsMetadata)
     );
     return getScopeStorage().run(scope, () => {
-      // TODO: Hooks
+      Feature.runCallback("onScopeEnter", scope);
+
       // this?.onScopeStart(scope);
       return (
         callback

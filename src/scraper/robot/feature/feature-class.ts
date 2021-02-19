@@ -1,4 +1,4 @@
-import { ScopeContext } from "../scope/scope-context";
+import { RootScopeContext, ScopeContext } from "../scope/scope-context";
 import {
   FeatureCallbackDescriptor,
   FeatureScopeVariableDescriptor,
@@ -8,14 +8,24 @@ import { RootScopeVariableDescriptor } from "./descriptors/scope-variable-descri
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
+interface FeatureCallbacks {
+  onRootScopeEnter(scope: RootScopeContext): void;
+
+  onScopeEnter(scope: ScopeContext): void;
+
+  onScopeExit(scope: ScopeContext): void;
+}
+
 /**
  * Base class for adding and managing functionalities of a scraper,
  * separately from other modules.
  */
-export abstract class Feature {
+export abstract class Feature implements FeatureCallbacks {
   private get selfConstructor() {
     return Object.getPrototypeOf(this).constructor;
   }
+
+  //#region Descriptors
 
   createCallback<
     T extends (...params: any) => any
@@ -63,7 +73,35 @@ export abstract class Feature {
     return new ScopeDataTree<T>(name);
   }
 
-  static instances = new WeakMap<new () => Feature, Feature>();
+  //#endregion
+
+  //#region Callbacks
+
+  // TODO: Tests for callbacks
+
+  // TODO: On scope error
+
+  onRootScopeEnter(scope: RootScopeContext) {}
+
+  onScopeEnter(scope: ScopeContext) {}
+
+  onScopeExit(scope: ScopeContext) {}
+
+  static runCallback<TName extends keyof FeatureCallbacks>(
+    name: TName,
+    ...params: Parameters<FeatureCallbacks[TName]>
+  ) {
+    for (const instance of Feature.instances.values()) {
+      // TODO: Get rid of any
+      (instance[name] as any).call(instance, ...params);
+    }
+  }
+
+  //#endregion
+
+  //#region Static instances
+
+  static instances = new Map<new () => Feature, Feature>();
 
   static getInstance<T extends Feature>(Feature: new () => T): T {
     let instance = this.instances.get(Feature);
@@ -73,4 +111,6 @@ export abstract class Feature {
     }
     return instance as T;
   }
+
+  //#endregion
 }

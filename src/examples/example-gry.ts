@@ -99,6 +99,9 @@ class TestRobot extends Robot {
 const test = new TestRobot();
 const run = test.scrapAllCategories();
 
+// TODO: Add method for initializing features
+run.rootScope.feature(CheckpointFeature); // Temporary feature initialization
+
 if(fs.existsSync("checkpoints.json")) {
   const contents = fs.readFileSync("checkpoints.json", "utf-8");
   const feat = run.rootScope.feature(CheckpointFeature);
