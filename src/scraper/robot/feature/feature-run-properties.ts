@@ -4,11 +4,29 @@ import { FeatureCallbackDescriptor } from "./descriptors";
 import { InitialVariableDescriptor } from "./descriptors/initial-variable-descriptor";
 import { Feature } from "./feature-class";
 
-export type FeatureRunProperties<T extends Feature> = {
-  callbacks: FeatureCallbacks<T>;
-  variables: FeatureVariables<T>;
-} & FeatureInitialMethods<T>;
+/**
+ * FeatureRunProperties is an object allowing to configure
+ * a given {@link Feature} for a particular {@link RobotRun} (entrypoint).
+ *
+ * FeatureRunProperties maps 3 types of members:
+ * - Initial variables (see {@link Feature.createInitialVariable}),
+ * which are configurable parameters accessed by {@link Feature}
+ * - Callbacks (see {@link Feature.createCallback}), which are invoked by feature instance
+ * and can be received by FeatureRunProperties. Invocation source {@link ScopeContext} is passed
+ * to each callback as the last parameter.
+ * - Initial methods (all methods prefixed by *init_*), which make it easier to configure
+ * features before you start the robot. When initial method is called from FeatureRunProperties,
+ * {@link FeatureConfiguration} is always passed as the first parameter to the initial method.
+ */
+export type FeatureRunProperties<TFeature extends Feature> = {
+  callbacks: FeatureCallbacks<TFeature>;
+  variables: FeatureVariables<TFeature>;
+} & FeatureInitialMethods<TFeature>;
 
+/**
+ * Takes all {@link FeatureCallbackDescriptor}s and maps them to a function
+ * with {@link ScopeContext} added as the last parameter.
+ */
 type FeatureCallbacks<TFeature extends Feature> = {
   [K in keyof TFeature as TFeature[K] extends FeatureCallbackDescriptor<
     infer TCallbackFunc
@@ -19,6 +37,9 @@ type FeatureCallbacks<TFeature extends Feature> = {
     : never;
 };
 
+/**
+ * Takes all {@link InitialVariableDescriptor}s and maps them into fields.
+ */
 type FeatureVariables<TFeature extends Feature> = {
   [K in keyof TFeature as TFeature[K] extends InitialVariableDescriptor<infer T>
     ? K
@@ -27,6 +48,9 @@ type FeatureVariables<TFeature extends Feature> = {
     : never;
 };
 
+/**
+ * Takes all methods prefixed by *init_* and removes first {@link FeatureConfiguration} parameter.
+ */
 type FeatureInitialMethods<TFeature extends Feature> = {
   [K in keyof TFeature as K extends `init_${infer Name}`
     ? TFeature[K] extends (
@@ -47,6 +71,9 @@ type WithScopeAsLastParameter<T extends Function> = T extends (
   ? (...params: [...params: Params, scope: ScopeContext]) => Return
   : never;
 
+/**
+ * Removes {@link FeatureConfiguration} parameter from a method if it's first.
+ */
 type WithoutConfigAsFirstParameter<T> = T extends (
   config: FeatureConfiguration,
   ...params: infer Params
@@ -54,6 +81,10 @@ type WithoutConfigAsFirstParameter<T> = T extends (
   ? (...params: Params) => TReturn
   : T;
 
+/**
+ * Maps {@link Feature} into {@link FeatureRunProperties} using {@link FeatureConfiguration}.
+ * See {@link FeatureRunProperties} for more information.
+ */
 export function mapFeatureToRunProperties<TFeature extends Feature>(
   FeatureConstructor: new () => TFeature,
   config: FeatureConfiguration
