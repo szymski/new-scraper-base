@@ -4,6 +4,7 @@ import {
   FeatureScopeVariableDescriptor,
 } from "./descriptors";
 import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
+import { RootScopeVariableDescriptor } from "./descriptors/scope-variable-descriptor";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
@@ -25,7 +26,7 @@ export abstract class Feature {
   createScopeRootVariable<T>(
     name?: string,
     defaultInitializer?: (scope: ScopeContext) => T
-  ): FeatureScopeVariableDescriptor<T> {
+  ): RootScopeVariableDescriptor<T> {
     return new FeatureScopeVariableDescriptor<T>(
       this.selfConstructor,
       "root",

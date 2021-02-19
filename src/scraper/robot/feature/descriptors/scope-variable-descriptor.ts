@@ -4,6 +4,11 @@ import { Feature } from "../feature-class";
 
 export type ScopeVariableType = "default" | "local" | "root";
 
+export type RootScopeVariableDescriptor<T> = Omit<
+  FeatureScopeVariableDescriptor<T>,
+  "parentValue" | "parentLocalValue"
+>;
+
 export class FeatureScopeVariableDescriptor<T> {
   readonly id: symbol;
 
@@ -18,24 +23,42 @@ export class FeatureScopeVariableDescriptor<T> {
 
   get value(): T | undefined {
     const scope = getCurrentScope();
-    let value = scope.get<T>(this.id);
+
+    let value = this.type === "root"
+      ? scope.root.get<T>(this.id)
+      : scope.get<T>(this.id);
+
     if (value === undefined && this.defaultInitializer) {
       value = this.defaultInitializer(scope);
       this.value = value;
     }
+
     return value;
   }
 
   set value(value: T | undefined) {
     const scope = getCurrentScope();
+
     if (this.type === "local") {
       scope.setLocal(this.id, value);
-    }
-    else if(this.type === "root") {
+    } else if (this.type === "root") {
       scope.root.set(this.id, value);
-    }
-    else {
+    } else {
       scope.set(this.id, value);
+    }
+  }
+
+  get parentValue(): T | undefined {
+    const parent = getCurrentScope().parent;
+    if (parent) {
+      return parent.get(this.id);
+    }
+  }
+
+  get parentLocalValue(): T | undefined {
+    const parent = getCurrentScope().parent;
+    if (parent) {
+      return parent.getLocal(this.id);
     }
   }
 

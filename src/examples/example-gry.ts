@@ -9,6 +9,7 @@ import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
 import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
+import {CheckpointFeature} from "../scraper/robot/feature/features/checkpoint";
 
 interface GameData {
   name: string;
@@ -46,7 +47,7 @@ class TestRobot extends Robot {
     // });
 
     await parallel()
-      .setLimit(4)
+      .setLimit(1)
       .for(1, 16, async (page) => {
         await this.scrapCategoryPage(url, page);
       });
@@ -110,10 +111,23 @@ run.callbacks.onFinished = () => {
   // }
 };
 
-run.callbacks.onCancelled = () => {
+let checkpoints: string[] = [];
+run.feature(CheckpointFeature).callbacks.onCheckpointUpdate = (list) => {
+  checkpoints = list;
   Logger.warn(
     JSON.stringify(
-      Object.keys(Parallel.getRootCheckpoints(run.rootScope).checkpoints),
+      list,
+      null,
+      "\t"
+    )
+  );
+};
+
+run.callbacks.onCancelled = () => {
+  Logger.warn("Checkpoint list:");
+  Logger.warn(
+    JSON.stringify(
+      checkpoints,
       null,
       "\t"
     )
