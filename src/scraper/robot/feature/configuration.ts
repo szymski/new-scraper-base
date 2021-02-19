@@ -7,7 +7,7 @@ import { ScopeContext } from "../scope/scope-context";
  * inside of the scraping feature and then handled outside of the robot.
  *
  * FeatureConfiguration is an internal class which is meant to be used inside
- * feature methods
+ * feature methods/descriptors.
  *
  * For connecting callbacks to a run and accessing feature context,
  * please refer to {@link FeatureRunProperties} and {@link FeatureContext} accordingly.
@@ -40,12 +40,18 @@ export class FeatureConfiguration {
     }
   }
 
-  // TODO: Documentation
-
+  /**
+   * Sets value of an initial configuration variable.
+   * To be used from {@link RobotRun} instance.
+   */
   setVariable(key: string, value: any) {
     this.#variables[key] = value;
   }
 
+  /**
+   * Gets value of an initial configuration variable.
+   * To be used from {@link Feature} instance, ideally only from {@link InitialVariableDescriptor} class.
+   */
   getVariable<T>(key: string): T {
     return this.#variables[key];
   }
