@@ -10,6 +10,7 @@ import { Robot } from "../scraper/robot/robot";
 import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
 import {CheckpointFeature} from "../scraper/robot/feature/features/checkpoint";
+import * as fs from "fs";
 
 interface GameData {
   name: string;
@@ -98,6 +99,13 @@ class TestRobot extends Robot {
 const test = new TestRobot();
 const run = test.scrapAllCategories();
 
+if(fs.existsSync("checkpoints.json")) {
+  const contents = fs.readFileSync("checkpoints.json", "utf-8");
+  const feat = run.rootScope.feature(CheckpointFeature);
+  run.rootScope.set(feat.checkpointList.id, JSON.parse(contents));
+  Logger.color(colors.rainbow, "Restored checkpoints");
+}
+
 run.callbacks.onDataReceived = (output) => {
   // Logger.info(output);
 };
@@ -114,13 +122,13 @@ run.callbacks.onFinished = () => {
 let checkpoints: string[] = [];
 run.feature(CheckpointFeature).callbacks.onCheckpointUpdate = (list) => {
   checkpoints = list;
-  Logger.warn(
-    JSON.stringify(
-      list,
-      null,
-      "\t"
-    )
-  );
+  // Logger.warn(
+  //   JSON.stringify(
+  //     list,
+  //     null,
+  //     "\t"
+  //   )
+  // );
 };
 
 run.callbacks.onCancelled = () => {
@@ -132,6 +140,8 @@ run.callbacks.onCancelled = () => {
       "\t"
     )
   );
+
+  fs.writeFileSync("checkpoints.json", JSON.stringify(checkpoints, null, "\t"));
 };
 
 run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
