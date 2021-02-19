@@ -32,6 +32,10 @@ describe("Feature context tests", () => {
         return param + this.someField;
       }
 
+      init_method() {
+
+      }
+
       callback = this.createCallback<() => void>();
 
       variable = this.createScopeVariable<string>("TestVariable");
@@ -40,6 +44,16 @@ describe("Feature context tests", () => {
     test("Should not map descriptors", () => {
       const mapped = mapFeatureToContext(TestFeature);
       expect(mapped).not.toHaveProperty("callback");
+    });
+
+    test("Should not map methods prefixed with init_", () => {
+      const mapped = mapFeatureToContext(TestFeature);
+      expect(mapped).not.toHaveProperty("init_method");
+    });
+
+    test("Should not map methods from base class", () => {
+      const mapped = mapFeatureToContext(TestFeature);
+      expect(mapped).not.toHaveProperty("createCallback");
     });
 
     test("Should create a proxy for a method without parameters", () => {

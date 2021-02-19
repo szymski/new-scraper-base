@@ -103,7 +103,7 @@ export class RootScopeContext extends ScopeContext {
     FeatureConfiguration
   >();
 
-  readonly featureContexts = new Map<new () => Feature, FeatureContext<any>>();
+  readonly featureContexts = new Map<new () => Feature, any>();
 
   protected constructor(data: Partial<RootScopeContext>) {
     super();
@@ -117,7 +117,7 @@ export class RootScopeContext extends ScopeContext {
   }
 
   feature<T extends Feature>(Feature: { new (): T }): FeatureContext<T> {
-    let context = this.featureContexts.get(Feature);
+    let context: FeatureContext<T> | undefined = this.featureContexts.get(Feature);
     if (!context) {
       context = mapFeatureToContext(Feature);
       this.featureContexts.set(Feature, context);
