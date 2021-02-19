@@ -1,5 +1,7 @@
+import * as fs from "fs";
 import { Logger } from "../../../util/logger";
-import { ScopeContext } from "../../scope/scope-context";
+import { RootScopeContext, ScopeContext } from "../../scope/scope-context";
+import { FeatureConfiguration } from "../configuration";
 import { Feature } from "../feature-class";
 
 export class CheckpointContainer {
@@ -64,12 +66,6 @@ export class CheckpointFeature extends Feature {
     return checkpoints.some((key) => key === itemUniqueId);
   }
 
-  restoreCheckpoints(scope: ScopeContext, list: string[]) {
-    Logger.verbose("Restoring checkpoint list");
-    this.checkpointList.value = list;
-    // TODO
-  }
-
   onCheckpointUpdate = this.createCallback<(checkpoints: string[]) => void>();
 
   checkpointList = this.createScopeRootVariable<string[]>(
@@ -83,4 +79,35 @@ export class CheckpointFeature extends Feature {
     "CheckpointLocalIndex",
     () => 0
   );
+
+  //#region Checkpoint restoring
+
+  init_restoreFromFile(config: FeatureConfiguration, filename: string) {
+    if (fs.existsSync(filename)) {
+      Logger.verbose(`Restoring checkpoints from '${filename}' file`);
+      const contents = fs.readFileSync(filename, "utf-8");
+      const checkpoints: string[] = JSON.parse(contents);
+      this.init_restore(config, checkpoints);
+    }
+  }
+
+  init_restore(config: FeatureConfiguration, checkpoints: string[]) {
+    this.checkpointsToRestore.setValue(config, checkpoints);
+  }
+
+  onRootScopeEnter(scope: RootScopeContext) {
+    const toRestore = this.checkpointsToRestore.value;
+    if (toRestore?.length) {
+      Logger.verbose(
+        `A list of ${toRestore.length} checkpoints was provided. Using restored progress.`
+      );
+      this.checkpointList.value = toRestore;
+    }
+  }
+
+  checkpointsToRestore = this.createInitialVariable<string[]>(
+    "CheckpointsToRestore"
+  );
+
+  //#endregion
 }

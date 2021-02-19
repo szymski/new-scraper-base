@@ -3,6 +3,7 @@ import {
   FeatureCallbackDescriptor,
   FeatureScopeVariableDescriptor,
 } from "./descriptors";
+import { InitialVariableDescriptor } from "./descriptors/initial-variable-descriptor";
 import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
 import { RootScopeVariableDescriptor } from "./descriptors/scope-variable-descriptor";
 
@@ -71,6 +72,17 @@ export abstract class Feature implements FeatureCallbacks {
 
   createScopeDataTree<T>(name?: string) {
     return new ScopeDataTree<T>(name);
+  }
+
+  createInitialVariable<T>(
+    name: string,
+    defaultInitializer?: () => T
+  ): InitialVariableDescriptor<T> {
+    return new InitialVariableDescriptor<T>(
+      this.selfConstructor,
+      name,
+      defaultInitializer
+    );
   }
 
   //#endregion
