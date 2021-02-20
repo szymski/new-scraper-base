@@ -1,5 +1,5 @@
 import { ScopeContext } from "../../scope/scope-context";
-import { mockParentScope } from "../../test-helpers";
+import { mockRootScope } from "../../test-helpers";
 import { Feature } from "../feature-class";
 import { mapFeatureToContext } from "../feature-context";
 
@@ -57,7 +57,7 @@ describe("Feature context tests", () => {
     test("Should create a proxy for a method without parameters", () => {
       const mapped = mapFeatureToContext(TestFeature);
 
-      mockParentScope(() => {
+      mockRootScope(() => {
         expect(mapped).toHaveProperty("method1_no_params");
         expect(mapped.method1_no_params()).toEqual("hello");
       });
@@ -66,7 +66,7 @@ describe("Feature context tests", () => {
     test("Should create a proxy and pass scope as first parameter implicitly", () => {
       const mapped = mapFeatureToContext(TestFeature);
 
-      mockParentScope((scope) => {
+      mockRootScope((scope) => {
         expect(mapped).toHaveProperty("method2_take_scope");
         expect(mapped.method2_take_scope()).toEqual(scope.name);
       });
@@ -75,7 +75,7 @@ describe("Feature context tests", () => {
     test("Should create a proxy for a method with parameters", () => {
       const mapped = mapFeatureToContext(TestFeature);
 
-      mockParentScope(() => {
+      mockRootScope(() => {
         expect(mapped).toHaveProperty("method3_with_params");
         expect(mapped.method3_with_params(1, 2)).toEqual(3);
       });
@@ -84,7 +84,7 @@ describe("Feature context tests", () => {
     test("Should preserve this when calling proxy", () => {
       const mapped = mapFeatureToContext(TestFeature);
 
-      mockParentScope(() => {
+      mockRootScope(() => {
         expect(mapped).toHaveProperty("method4_preserve_this");
         expect(mapped.method4_preserve_this()).toEqual(123);
       });
@@ -93,7 +93,7 @@ describe("Feature context tests", () => {
     test("Should preserve and be able to call other methods", () => {
       const mapped = mapFeatureToContext(TestFeature);
 
-      mockParentScope(() => {
+      mockRootScope(() => {
         expect(mapped).toHaveProperty("method5_nested_call");
         expect(mapped.method5_nested_call("hello")).toEqual("hello123");
       });
@@ -103,7 +103,7 @@ describe("Feature context tests", () => {
       const instance = Feature.getInstance(TestFeature);
       const mapped = mapFeatureToContext(TestFeature);
 
-      mockParentScope(() => {
+      mockRootScope(() => {
         expect(mapped).toHaveProperty("variable");
         expect(mapped.variable).toBe(instance.variable);
       });
@@ -114,7 +114,7 @@ describe("Feature context tests", () => {
     test("Should return the same mapped feature context instance in scope context", () => {
       class TestFeature extends Feature {}
 
-      mockParentScope((scope) => {
+      mockRootScope((scope) => {
         const first = scope.feature(TestFeature);
         const second = scope.feature(TestFeature);
 

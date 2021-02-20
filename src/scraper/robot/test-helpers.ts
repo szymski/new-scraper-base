@@ -6,7 +6,7 @@ import { getScopeStorage } from "./scope/storage";
 /**
  * Initializes a root scope and runs given function with it.
  */
-export function mockParentScope(fn: (scope: RootScopeContext) => void) {
+export function mockRootScope(fn: (scope: RootScopeContext) => void) {
   let rootScope: RootScopeContext;
   rootScope = RootScopeContext.create("MOCK");
   runWithInitialScope(() => fn(rootScope), rootScope);

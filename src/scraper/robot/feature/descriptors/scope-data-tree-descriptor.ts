@@ -1,9 +1,10 @@
 import { getCurrentScope } from "../../scope";
 
+// TODO: Document and test this
+
 /*
   Root context is always present, value is optional.
 */
-
 export class ScopeDataTree<T> {
   readonly dataKey: symbol;
 

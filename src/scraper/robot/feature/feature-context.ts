@@ -1,10 +1,10 @@
-import { Feature } from "./feature-class";
 import { getCurrentScope } from "../scope";
 import { ScopeContext } from "../scope/scope-context";
 import { FeatureScopeVariableDescriptor } from "./descriptors";
 import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
 import { InitialVariableDescriptor } from "./descriptors/initial-variable-descriptor";
 import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
+import { Feature } from "./feature-class";
 
 /**
  * FeatureContext is an object simplifying the usage
@@ -42,10 +42,10 @@ type ExcludeNonContextFields<
 > = TField extends FeatureCallbackDescriptor<any>
   ? never
   : TField extends InitialVariableDescriptor<any>
-  ? never
+  ? TKey
   : TKey extends `init_${infer _}`
   ? never
-  : TKey;
+  : never;
 
 type ExcludeMembersOfBaseClass<T, TBase> = Omit<T, keyof TBase>;
 
@@ -84,6 +84,8 @@ export function mapFeatureToContext<TFeature extends Feature>(
   // Map descriptors
   for (const [key, value] of Object.entries(instance)) {
     if (value instanceof FeatureScopeVariableDescriptor) {
+      obj[key] = value;
+    } else if (value instanceof InitialVariableDescriptor) {
       obj[key] = value;
     } else if (value instanceof ScopeDataTree) {
       obj[key] = value;
