@@ -45,7 +45,7 @@ type ExcludeNonContextFields<
   ? TKey
   : TKey extends `init_${infer _}`
   ? never
-  : never;
+  : TKey;
 
 type ExcludeMembersOfBaseClass<T, TBase> = Omit<T, keyof TBase>;
 
