@@ -4,12 +4,47 @@ import { Feature } from "../feature-class";
 import { mapFeatureToRunProperties } from "../feature-run-properties";
 
 describe("Feature run properties tests", () => {
-  test("Should only map descriptors", () => {
+  describe("Initial methods prefixed with 'init_'", () => {
     class TestFeature extends Feature {
+      method1() {}
+
+      init_method2(config: FeatureConfiguration, a: number, b: number) {}
+    }
+
+    test("Should map and remove 'init_' prefix", () => {
+      const config = new FeatureConfiguration();
+      const mapped = mapFeatureToRunProperties(TestFeature, config);
+
+      expect(mapped).not.toHaveProperty("method1");
+      expect(mapped).toHaveProperty("method2");
+    });
+
+    test("Should create a proxy which assigns configuration as first param", () => {
+      const feature = Feature.getInstance(TestFeature);
+      const spy = jest.spyOn(feature, "init_method2").mockReturnThis();
+
+      const config = new FeatureConfiguration();
+      const mapped = mapFeatureToRunProperties(TestFeature, config);
+
+      mapped.method2(2, 3);
+
+      expect(spy).toHaveBeenCalledWith(config, 2, 3);
+      expect(spy).toHaveReturnedWith(feature);
+    });
+  });
+
+  test("Should not map methods and fields", () => {
+    class TestFeature extends Feature {
+      constructor() {
+        super();
+      }
+
       method() {}
 
       field = 123;
       onCallback = this.createCallback<(param1: number) => void>();
+
+      static asd = 5;
     }
 
     const config = new FeatureConfiguration();

@@ -116,8 +116,6 @@ export function mapFeatureToRunProperties<TFeature extends Feature>(
         },
       });
     }
-
-    // TODO: Tests for variables
   }
 
   // Map initial methods
@@ -130,7 +128,7 @@ export function mapFeatureToRunProperties<TFeature extends Feature>(
     if (typeof value === "function" && key.startsWith("init_")) {
       const mappedKey = key.replace("init_", "");
       methods[mappedKey] = (...params: any[]) => {
-        return value.call(instance, config, ...params);
+        return (instance as any)[key].call(instance, config, ...params);
       };
     }
   }
