@@ -34,6 +34,10 @@ export class ScopeContext {
     return this.#root;
   }
 
+  set root(value: RootScopeContext) {
+    this.#root = value;
+  }
+
   /**
    * Gets scope data for a given key.
    * First attempts to take local value, if it's undefined,

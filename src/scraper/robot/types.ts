@@ -1,22 +1,11 @@
-import { Feature, FeatureRunProperties } from "./feature";
-import { RootScopeContext } from "./scope/root-scope-context";
+// TODO: Get rid of this
 
-export type RobotRunStatus = "initial" | "running" | "finished" | "cancelled";
-
-export interface RobotRun<TData, TReturn> {
-  status: RobotRunStatus;
-  rootScope: RootScopeContext;
+export interface _RobotRun<TData, TReturn> {
   callbacks: {
     onDataReceived(output: OutputTypeUnion<TData>): void;
     onFinished(): void;
     onCancelled(): void;
   };
-
-  start(): Promise<TReturn>;
-
-  cancel(): Promise<void>;
-
-  feature<T extends Feature>(feature: new () => T): FeatureRunProperties<T>;
 }
 
 type OutputType<TName, TData> = {
