@@ -39,4 +39,21 @@ describe("Feature run properties tests", () => {
 
     expect(spy).toBeCalledWith(descriptor.id, fn);
   });
+
+  test("Should create a proxy for initial variable", () => {
+    class TestFeature extends Feature {
+      variable = this.createInitialVariable<string>("Variable");
+    }
+
+    const featureInstance = Feature.getInstance(TestFeature);
+    const descriptor = featureInstance.variable;
+
+    const config = new FeatureConfiguration();
+    const mapped = mapFeatureToRunProperties(TestFeature, config);
+
+    expect(config.getVariable(descriptor.id)).toBeUndefined();
+    mapped.variables.variable = "test";
+    expect(config.getVariable(descriptor.id)).toEqual("test");
+    expect(mapped.variables.variable).toEqual("test");
+  });
 });
