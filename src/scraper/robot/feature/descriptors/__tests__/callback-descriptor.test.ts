@@ -1,4 +1,4 @@
-import { mockScope } from "../../../test-helpers";
+import { mockParentScope } from "../../../test-helpers";
 import { Feature } from "../../feature-class";
 import { FeatureCallbackDescriptor } from "../callback-descriptor";
 
@@ -10,7 +10,7 @@ describe("Feature callback descriptor tests", () => {
       TestFeature
     );
 
-    mockScope((scope) => {
+    mockParentScope((scope) => {
       const config = scope.getFeatureConfiguration(TestFeature);
       const spy = jest.spyOn(config, "invokeCallback");
 

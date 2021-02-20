@@ -1,6 +1,6 @@
 import { getCurrentScope } from "../../../scope";
 import { wrapWithScope } from "../../../scope/helpers";
-import { mockScope } from "../../../test-helpers";
+import { mockParentScope, mockScope } from "../../../test-helpers";
 import { Feature } from "../../feature-class";
 
 describe("Feature scope variable descriptor tests", () => {
@@ -15,7 +15,7 @@ describe("Feature scope variable descriptor tests", () => {
   }
 
   test("Should set non-local value", () => {
-    mockScope((scope) => {
+    mockParentScope((scope) => {
       const feature = scope.feature(TestFeature);
       const spy = jest.spyOn(scope, "set");
 
@@ -26,7 +26,7 @@ describe("Feature scope variable descriptor tests", () => {
   });
 
   test("Should set local value", () => {
-    mockScope((scope) => {
+    mockParentScope((scope) => {
       const feature = scope.feature(TestFeature);
       const spy = jest.spyOn(scope, "setLocal");
 
@@ -37,7 +37,7 @@ describe("Feature scope variable descriptor tests", () => {
   });
 
   test("Should set root value", async () => {
-    await mockScope(async (scope1) => {
+    await mockParentScope(async (scope1) => {
       const fn = wrapWithScope(
         async () => {
           const scope2 = getCurrentScope();
@@ -54,15 +54,41 @@ describe("Feature scope variable descriptor tests", () => {
   });
 
   test("Should get value", () => {
-    mockScope((scope) => {
+    mockParentScope((scope) => {
       const feature = scope.feature(TestFeature);
       scope.set(feature.nonLocal.id, 123);
       expect(feature.nonLocal.value).toEqual(123);
     });
   });
 
+  test("Should get parent value", () => {
+    mockParentScope((scope1) => {
+      const feature = scope1.feature(TestFeature);
+      feature.nonLocal.value = "scope1";
+      mockScope((scope2) => {
+        expect(feature.nonLocal.parentValue).toEqual("scope1");
+        expect(feature.nonLocal.value).toEqual("scope1");
+        feature.nonLocal.value = "scope2";
+        expect(feature.nonLocal.parentValue).toEqual("scope1");
+      });
+      expect(feature.nonLocal.parentValue).toBeUndefined();
+    });
+  });
+
+  test("Should get parent local value", () => {
+    mockParentScope((scope1) => {
+      const feature = scope1.feature(TestFeature);
+      feature.local.value = "scope1";
+      mockScope((scope2) => {
+        expect(feature.local.value).toBeUndefined();
+        expect(feature.local.parentLocalValue).toEqual("scope1");
+      });
+      expect(feature.local.parentLocalValue).toBeUndefined();
+    });
+  });
+
   test("Should initialize value on get", () => {
-    mockScope((scope) => {
+    mockParentScope((scope) => {
       const feature = scope.feature(TestFeature);
       const spy = jest.spyOn(scope, "set");
 
@@ -73,7 +99,7 @@ describe("Feature scope variable descriptor tests", () => {
   });
 
   test("Should reset", () => {
-    mockScope((scope) => {
+    mockParentScope((scope) => {
       const feature = scope.feature(TestFeature);
 
       feature.withInitializer.value = "test";
