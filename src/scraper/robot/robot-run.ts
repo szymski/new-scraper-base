@@ -8,7 +8,7 @@ import {
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/root-scope-context";
-import { OutputTypeUnion } from "./types";
+import { RobotOutputData } from "./types";
 
 export type RobotRunStatus = "initial" | "running" | "finished" | "cancelled";
 
@@ -45,7 +45,7 @@ export class RobotRun<TData, TReturn> {
         this.callbacks.onDataReceived({
           type,
           data,
-        } as OutputTypeUnion<TData>);
+        } as RobotOutputData<TData>);
       }
     };
   }
@@ -125,7 +125,7 @@ export class RobotRun<TData, TReturn> {
   }
 
   readonly callbacks = {
-    onDataReceived: (output: OutputTypeUnion<TData>) => {},
+    onDataReceived: (output: RobotOutputData<TData>) => {},
     onFinished: () => {},
     onCancelled: () => {},
   };

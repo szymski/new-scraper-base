@@ -1,12 +1,4 @@
-// TODO: Get rid of this
-
-export interface _RobotRun<TData, TReturn> {
-  callbacks: {
-    onDataReceived(output: OutputTypeUnion<TData>): void;
-    onFinished(): void;
-    onCancelled(): void;
-  };
-}
+// TODO: Use better names and document this
 
 type OutputType<TName, TData> = {
   type: TName;
@@ -17,6 +9,6 @@ type TemporaryOutputMap<TDataMap> = {
   [K in keyof TDataMap as K]: OutputType<K, TDataMap[K]>;
 };
 
-export type OutputTypeUnion<
+export type RobotOutputData<
   TDataMap
 > = TemporaryOutputMap<TDataMap>[keyof TDataMap];
