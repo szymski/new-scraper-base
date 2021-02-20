@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import { Logger } from "../../../util/logger";
-import { RootScopeContext, ScopeContext } from "../../scope/scope-context";
+import { RootScopeContext } from "../../scope/root-scope-context";
+import { ScopeContext } from "../../scope/scope-context";
 import { FeatureConfiguration } from "../configuration";
 import { Feature } from "../feature-class";
 

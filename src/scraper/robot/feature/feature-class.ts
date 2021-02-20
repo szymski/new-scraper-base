@@ -1,4 +1,5 @@
-import { RootScopeContext, ScopeContext } from "../scope/scope-context";
+import { RootScopeContext } from "../scope/root-scope-context";
+import { ScopeContext } from "../scope/scope-context";
 import {
   FeatureCallbackDescriptor,
   FeatureScopeVariableDescriptor,

@@ -2,7 +2,8 @@ import "reflect-metadata";
 import { AbortedException } from "../../exceptions";
 import { Feature } from "../feature";
 import { ScopeParamMetadata } from "../metadata-helpers";
-import { RootScopeContext, ScopeContext } from "./scope-context";
+import { RootScopeContext } from "./root-scope-context";
+import { ScopeContext } from "./scope-context";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
 
 export function formatScopeParams(
