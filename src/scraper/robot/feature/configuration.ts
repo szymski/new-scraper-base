@@ -1,4 +1,3 @@
-import { Logger } from "../../util/logger";
 import { ScopeContext } from "../scope/scope-context";
 
 /**
@@ -33,9 +32,7 @@ export class FeatureConfiguration {
    */
   invokeCallback(key: symbol, scope: ScopeContext, ...params: any[]) {
     const callback = this.#callbacks[key];
-    if (!callback) {
-      Logger.warn(`Attempted to run a missing callback ${key.toString()}`);
-    } else {
+    if (callback) {
       callback(...params, scope);
     }
   }

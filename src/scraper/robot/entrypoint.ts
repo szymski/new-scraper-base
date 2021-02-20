@@ -15,6 +15,8 @@ import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/scope-context";
 import { OutputTypeUnion, RobotRun } from "./types";
 
+// TODO: Clean this mess, WTF, what did I do, lol
+
 interface EntrypointContext {
   name: string;
 }

@@ -2,12 +2,9 @@ import { createEntrypointRun } from "./entrypoint";
 import { getCurrentScope } from "./scope";
 import { ScopeContext } from "./scope/scope-context";
 import { RobotRun } from "./types";
+import { DataFeature } from "./feature/features/data";
 
 export class Robot {
-  onScopeStart(scope: ScopeContext) {}
-
-  onScopeEnd(scope: ScopeContext) {}
-
   entrypoint<TData, TReturn = any>(
     fn: () => Promise<TReturn>
   ): RobotRun<TData, TReturn> {
@@ -15,6 +12,6 @@ export class Robot {
   }
 
   protected onDataReceived(type: string, data: any) {
-    getCurrentScope().root.callbacks.onDataReceived(type, data);
+    getCurrentScope().feature(DataFeature).reportData(type, data);
   }
 }

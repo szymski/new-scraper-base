@@ -11,6 +11,7 @@ import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
 import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
+import { DataFeature } from "../scraper/robot/feature/features/data";
 
 interface GameData {
   name: string;
@@ -72,7 +73,7 @@ class TestRobot extends Robot {
 
     await parallel()
       .setLimit(1)
-      .forEach(gameUrls, async (element) => {
+      .forEach(gameUrls, async (url) => {
         await this.scrapGame(url);
       });
 
@@ -99,14 +100,22 @@ class TestRobot extends Robot {
 const test = new TestRobot();
 const run = test.scrapAllCategories();
 
+// TODO: Initialize DataFeature by default in entrypoint
+run.feature(DataFeature);
+
 run.feature(CheckpointFeature).restoreFromFile("checkpoints.json");
 
 run.callbacks.onDataReceived = (output) => {
-  // Logger.info(output);
+  Logger.info(output);
 };
 
 run.callbacks.onFinished = () => {
   Logger.info("onFinished");
+  // for (const key of Object.keys(
+  //   Parallel.getRootCheckpoints(run.rootScope).checkpoints
+  // )) {
+  //   Logger.error(key);
+  // }
 };
 
 let checkpoints: string[] = [];
