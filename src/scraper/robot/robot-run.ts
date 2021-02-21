@@ -5,12 +5,18 @@ import {
   FeatureRunProperties,
   mapFeatureToRunProperties,
 } from "./feature";
+import { DataFeature } from "./feature/features/data";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/root-scope-context";
 import { RobotOutputData } from "./types";
 
-export type RobotRunStatus = "initial" | "running" | "finished" | "cancelled";
+export type RobotRunStatus =
+  | "initial"
+  | "running"
+  | "finished"
+  | "errored"
+  | "cancelled";
 
 /**
  * RobotRun is a class for controlling the execution of a given robot task.
@@ -48,10 +54,20 @@ export class RobotRun<TData, TReturn> {
         } as RobotOutputData<TData>);
       }
     };
+
+    this.bootstrapFeatures();
+  }
+
+  private bootstrapFeatures() {
+    this.feature(DataFeature);
   }
 
   get status() {
     return this.#status;
+  }
+
+  get rootScope() {
+    return this.#rootScope;
   }
 
   /**
@@ -90,8 +106,14 @@ export class RobotRun<TData, TReturn> {
 
     const result = await runWithInitialScope(() => {
       Feature.runCallback("onRootScopeEnter", this.#rootScope);
-      const result = this.#fn();
-      Feature.runCallback("onScopeExit", this.#rootScope);
+      const result = this.#fn()
+        .catch((e) => {
+          this.#status = "errored";
+          throw e;
+        })
+        .finally(() => {
+          Feature.runCallback("onScopeExit", this.#rootScope);
+        });
       return result;
     }, this.#rootScope);
 

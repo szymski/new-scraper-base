@@ -100,9 +100,6 @@ class TestRobot extends Robot {
 const test = new TestRobot();
 const run = test.scrapAllCategories();
 
-// TODO: Initialize DataFeature by default in entrypoint
-run.feature(DataFeature);
-
 run.feature(CheckpointFeature).restoreFromFile("checkpoints.json");
 
 run.callbacks.onDataReceived = (output) => {

@@ -39,12 +39,18 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       formatScopeParams(params, paramsMetadata)
     );
     return getScopeStorage().run(scope, () => {
-      Feature.runCallback("onScopeEnter", scope);
+      // Only call callback on non-root scopes
+      if (scope.parent) {
+        Feature.runCallback("onScopeEnter", scope);
+      }
+
+      // TODO: Clean this up
 
       // this?.onScopeStart(scope);
       return (
-        callback
-          .apply(this, params)
+        // Promise.resolve is called here to ensure we always operate on a promise.
+        // Without it, if scope didn't return a promise, the code would crash.
+        Promise.resolve(callback.apply(this, params))
           // .catch((e: any) => {
           //   Logger.error(e);
           //   throw e;
@@ -54,6 +60,12 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
             scope.totalDuration =
               scope.endDate.getTime() - scope.startDate.getTime();
             // this?.onScopeEnd(scope);
+
+            // Only call callback on non-root scopes
+            if(scope.parent) {
+              Feature.runCallback("onScopeExit", scope);
+            }
+
             return result;
           })
       );

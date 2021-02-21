@@ -21,3 +21,9 @@ export function mockScope(fn: (scope: ScopeContext) => void) {
   const scope = ScopeContext.inherit(currentScope, "TEST", "");
   return getScopeStorage().run(scope, () => fn(scope));
 }
+
+export function sleepAsync(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
