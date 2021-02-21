@@ -15,7 +15,7 @@ export class CheckpointContainer {
     const checkpointItemId = `${this.uniqueId}[${JSON.stringify(item)}]`;
 
     if (this.feature.isFinished(checkpointItemId)) {
-      Logger.warn(`Skipping ${checkpointItemId}`);
+      // Logger.warn(`Skipping ${checkpointItemId}`);
     } else {
       this.feature.checkpointUniqueId.value = checkpointItemId;
       const result = await fn();
@@ -49,7 +49,7 @@ export class CheckpointFeature extends Feature {
   }
 
   markItemAsFinished(checkpointItemId: string) {
-    const checkpoints = this.checkpointList.value!;
+    const checkpoints = this.checkpoints.value!;
 
     const withChildrenRemoved = checkpoints.filter(
       (key) => !key.startsWith(checkpointItemId)
@@ -57,22 +57,18 @@ export class CheckpointFeature extends Feature {
 
     withChildrenRemoved.push(checkpointItemId);
 
-    this.checkpointList.value = withChildrenRemoved;
+    this.checkpoints.value = withChildrenRemoved;
+    this.checkpoints.value = withChildrenRemoved;
 
     this.onCheckpointUpdate.invoke(withChildrenRemoved);
   }
 
   isFinished(itemUniqueId: string) {
-    const checkpoints = this.checkpointList.value!;
+    const checkpoints = this.checkpoints.value!;
     return checkpoints.some((key) => key === itemUniqueId);
   }
 
   onCheckpointUpdate = this.createCallback<(checkpoints: string[]) => void>();
-
-  checkpointList = this.createScopeRootVariable<string[]>(
-    "CheckpointList",
-    () => []
-  );
 
   checkpointUniqueId = this.createScopeVariable<string>("CheckpointUniqueId");
 
@@ -82,6 +78,14 @@ export class CheckpointFeature extends Feature {
   );
 
   //#region Checkpoint restoring
+
+  /**
+   * Uses file of a given name to automatically read and save checkpoints.
+   */
+  init_useFile(config: FeatureConfiguration, filename: string) {
+    this.checkpointsFilename.setValue(config, filename);
+    this.init_restoreFromFile(config, filename);
+  }
 
   init_restoreFromFile(config: FeatureConfiguration, filename: string) {
     if (fs.existsSync(filename)) {
@@ -102,13 +106,30 @@ export class CheckpointFeature extends Feature {
       Logger.verbose(
         `A list of ${toRestore.length} checkpoints was provided. Using restored progress.`
       );
-      this.checkpointList.value = toRestore;
+      this.checkpoints.value = toRestore;
     }
   }
 
-  checkpointsToRestore = this.createInitialVariable<string[]>(
+  onScopeExit(scope: ScopeContext) {
+    if(scope instanceof RootScopeContext) {
+      const filename = this.checkpointsFilename.value;
+      if(filename) {
+        Logger.verbose(`Saving checkpoints to ${filename}`);
+        const serialized = JSON.stringify(this.checkpoints.value, null, "\t");
+        fs.writeFileSync(filename, serialized);
+      }
+    }
+  }
+
+  private checkpointsFilename = this.createInitialVariable<string>(
+    "CheckpointsFile"
+  );
+
+  private checkpointsToRestore = this.createInitialVariable<string[]>(
     "CheckpointsToRestore"
   );
+
+  checkpoints = this.createOutputVariable<string[]>("Checkpoints", () => []);
 
   //#endregion
 }

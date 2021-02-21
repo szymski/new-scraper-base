@@ -14,6 +14,7 @@ import { ScopeContext } from "../scope/scope-context";
 export class FeatureConfiguration {
   #callbacks: any = {};
   #variables: any = {};
+  #outputs: any = {};
 
   /**
    * Registers a feature callback to be later invoked with {@link invokeCallback}.
@@ -51,5 +52,15 @@ export class FeatureConfiguration {
    */
   getVariable<T>(key: string): T {
     return this.#variables[key];
+  }
+
+  //TODO: Docs
+
+  setOutput(key: string, value: any) {
+    this.#outputs[key] = value;
+  }
+
+  getOutput<T>(key: string): T {
+    return this.#outputs[key];
   }
 }

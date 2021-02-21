@@ -7,6 +7,7 @@ import {
 import { InitialVariableDescriptor } from "./descriptors/initial-variable-descriptor";
 import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
 import { RootScopeVariableDescriptor } from "./descriptors/scope-variable-descriptor";
+import { OutputVariableDescriptor } from "./descriptors/output-variable-descriptor";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
@@ -88,13 +89,20 @@ export abstract class Feature implements FeatureCallbacks {
     );
   }
 
+  createOutputVariable<T>(
+    name: string,
+    defaultInitializer?: () => T
+  ): OutputVariableDescriptor<T> {
+    return new OutputVariableDescriptor<T>(
+      this.selfConstructor,
+      name,
+      defaultInitializer,
+    );
+  }
+
   //#endregion
 
   //#region Callbacks
-
-  // TODO: Tests for callbacks
-
-  // TODO: On scope error
 
   /**
    * Called when root scope is entered.

@@ -2,6 +2,7 @@ import { ScopeContext } from "../scope/scope-context";
 import { FeatureConfiguration } from "./configuration";
 import { FeatureCallbackDescriptor } from "./descriptors";
 import { InitialVariableDescriptor } from "./descriptors/initial-variable-descriptor";
+import { OutputVariableDescriptor } from "./descriptors/output-variable-descriptor";
 import { Feature } from "./feature-class";
 
 /**
@@ -21,6 +22,7 @@ import { Feature } from "./feature-class";
 export type FeatureRunProperties<TFeature extends Feature> = {
   callbacks: FeatureCallbacks<TFeature>;
   variables: FeatureVariables<TFeature>;
+  outputs: FeatureOutputs<TFeature>;
 } & FeatureInitialMethods<TFeature>;
 
 /**
@@ -46,6 +48,15 @@ type FeatureVariables<TFeature extends Feature> = {
     : never]: TFeature[K] extends InitialVariableDescriptor<infer T>
     ? T
     : never;
+};
+
+/**
+ * Takes all {@link OutputVariableDescriptor}s and maps them into fields.
+ */
+type FeatureOutputs<TFeature extends Feature> = {
+  [K in keyof TFeature as TFeature[K] extends OutputVariableDescriptor<infer T>
+    ? K
+    : never]: TFeature[K] extends OutputVariableDescriptor<infer T> ? T : never;
 };
 
 /**
@@ -94,6 +105,7 @@ export function mapFeatureToRunProperties<TFeature extends Feature>(
 
   const callbacks = {};
   const variables = {};
+  const outputs = {};
 
   for (const [key, descriptor] of Object.entries(instance) as [string, any][]) {
     // Callbacks
@@ -113,6 +125,18 @@ export function mapFeatureToRunProperties<TFeature extends Feature>(
         },
         set(value: any) {
           config.setVariable(descriptor.id, value);
+        },
+      });
+    }
+
+    // Output variables
+    else if (descriptor instanceof OutputVariableDescriptor) {
+      Object.defineProperty(outputs, key, {
+        get() {
+          return config.getOutput(descriptor.id);
+        },
+        set(value: any) {
+          config.setOutput(descriptor.id, value);
         },
       });
     }
@@ -136,6 +160,7 @@ export function mapFeatureToRunProperties<TFeature extends Feature>(
   return {
     callbacks: callbacks as FeatureCallbacks<TFeature>,
     variables: variables as FeatureVariables<TFeature>,
+    outputs: outputs as FeatureOutputs<TFeature>,
     ...methods,
   } as any;
 }

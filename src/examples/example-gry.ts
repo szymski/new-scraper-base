@@ -99,7 +99,7 @@ class TestRobot extends Robot {
 const test = new TestRobot();
 const run = test.scrapAllCategories();
 
-run.feature(CheckpointFeature).restoreFromFile("checkpoints.json");
+run.feature(CheckpointFeature).useFile("checkpoints.json");
 
 run.callbacks.onDataReceived = (output) => {
   Logger.info(output);
@@ -107,25 +107,6 @@ run.callbacks.onDataReceived = (output) => {
 
 run.callbacks.onFinished = () => {
   Logger.info("onFinished");
-};
-
-let checkpoints: string[] = [];
-run.feature(CheckpointFeature).callbacks.onCheckpointUpdate = (list) => {
-  checkpoints = list;
-  // Logger.warn(
-  //   JSON.stringify(
-  //     list,
-  //     null,
-  //     "\t"
-  //   )
-  // );
-};
-
-run.callbacks.onCancelled = () => {
-  Logger.warn("Checkpoint list:");
-  Logger.warn(JSON.stringify(checkpoints, null, "\t"));
-
-  fs.writeFileSync("checkpoints.json", JSON.stringify(checkpoints, null, "\t"));
 };
 
 run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
@@ -140,11 +121,9 @@ run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
 
 run
   .start()
-  .catch((e) => {
-    Logger.error(e);
-  })
+  .catch()
   .then();
 
 setTimeout(() => {
   run.cancel().then(() => {});
-}, 20_000);
+}, 5_000);
