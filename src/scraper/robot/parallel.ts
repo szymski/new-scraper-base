@@ -9,16 +9,6 @@ import { ProgressTracker } from "./progress-tracker";
 import { getCurrentScope } from "./scope";
 import { ScopeContext } from "./scope/scope-context";
 
-const DATA_KEYS = {
-  ParallelIndex: Symbol("ParallelIndex"),
-  ParallelCheckpointsRoot: Symbol("ParallelCheckpointsRoot"),
-  CheckpointUniqueId: Symbol("CheckpointUniqueId"),
-} as const;
-
-interface ParallelCheckpoints {
-  checkpoints: { [uniqueId: string]: ParallelCheckpoint };
-}
-
 interface ParallelCheckpoint {
   finished: boolean;
 }
@@ -27,8 +17,6 @@ export class Parallel {
   #name?: string;
 
   #checkpointContainer: CheckpointContainer;
-  // #index: number;
-  // #uniqueId: string;
 
   #taskLimit = 1;
 
@@ -37,19 +25,6 @@ export class Parallel {
     this.#checkpointContainer = getCurrentScope()
       .feature(CheckpointFeature)
       .createCheckpointContainer();
-
-    // const scope = getCurrentScope();
-    // const index = Parallel.getAndIncreaseIndex(scope);
-    // this.#index = index;
-    //
-    // let parentKey: string | undefined;
-    // if (scope.parent) {
-    //   parentKey = scope.parent.get<string>(DATA_KEYS.CheckpointUniqueId);
-    // }
-    // this.#uniqueId = `${parentKey ? `${parentKey}.` : ""}${
-    //   scope.name
-    // }[${index}]`;
-    // scope.set(DATA_KEYS.CheckpointUniqueId, this.#uniqueId);
   }
 
   /**
@@ -142,56 +117,6 @@ export class Parallel {
     }
   }
 
-  // static getAndIncreaseIndex(scope: ScopeContext): number {
-  //   const number = scope.get<number>(DATA_KEYS.ParallelIndex) ?? 0;
-  //   scope.setLocal(DATA_KEYS.ParallelIndex, number + 1);
-  //   return number;
-  // }
-
-  // static getRootCheckpoints(scope: ScopeContext) {
-  //   let checkpoints = scope.get<ParallelCheckpoints>(
-  //     DATA_KEYS.ParallelCheckpointsRoot
-  //   );
-  //   if (!checkpoints) {
-  //     checkpoints = {
-  //       checkpoints: {},
-  //     };
-  //     scope.root.set(DATA_KEYS.ParallelCheckpointsRoot, checkpoints);
-  //   }
-  //   return checkpoints;
-  // }
-
-  // private static markCheckpointAsFinished(
-  //   scope: ScopeContext,
-  //   uniqueId: string
-  // ) {
-  //   const checkpoints = Parallel.getRootCheckpoints(scope);
-  //   let checkpoint = checkpoints.checkpoints[uniqueId];
-  //   if (!checkpoint) {
-  //     checkpoint = {
-  //       finished: true,
-  //     };
-  //     checkpoints.checkpoints[uniqueId] = checkpoint;
-  //   }
-  //
-  //   // Logger.warn(`Removing: ${uniqueId}`);
-  //   // Clear child checkpoints
-  //   const keysToDelete = Object.keys(checkpoints.checkpoints).filter(
-  //     (key) => key.startsWith(uniqueId) && key != uniqueId
-  //   );
-  //   for (const key of keysToDelete) {
-  //     delete checkpoints.checkpoints[key];
-  //   }
-  // }
-
-  static restoreCheckpoints(
-    scope: ScopeContext,
-    checkpoints: ParallelCheckpoints
-  ) {
-    Logger.verbose(`Restoring checkpoints`);
-    scope.set(DATA_KEYS.ParallelCheckpointsRoot, checkpoints);
-  }
-
   private async wrapElement<T>(
     item: any,
     tracker: ProgressTracker,
@@ -202,15 +127,6 @@ export class Parallel {
     tracker.increase();
 
     return result;
-
-    // const checkpointId = `${this.#uniqueId}[${JSON.stringify(item)}]`;
-    // const scope = getCurrentScope();
-    // scope.set(DATA_KEYS.CheckpointUniqueId, checkpointId);
-    // const result = await fn();
-    // scope.set(DATA_KEYS.CheckpointUniqueId, this.#uniqueId);
-    // tracker.increase();
-    // Parallel.markCheckpointAsFinished(scope, checkpointId);
-    // return result;
   }
 }
 
