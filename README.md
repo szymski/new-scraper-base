@@ -50,4 +50,4 @@ Features I am planning to add:
 - Conditions - only perform actions when a certain condition is met, if it's not, satisfy it
 
 ### TODO:
-- Per-run setTimeout/setInterval feature
+- ✔ ~~Per-run setTimeout/setInterval feature~~
