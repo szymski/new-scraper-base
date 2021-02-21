@@ -16,6 +16,8 @@ interface FeatureCallbacks {
   onScopeEnter(scope: ScopeContext): void;
 
   onScopeExit(scope: ScopeContext): void;
+
+  onScopeError(scope: ScopeContext, source: ScopeContext, error: Error): void;
 }
 
 /**
@@ -94,11 +96,37 @@ export abstract class Feature implements FeatureCallbacks {
 
   // TODO: On scope error
 
+  /**
+   * Called when root scope is entered.
+   * Will be invoked only once for an entrypoint.
+   */
   onRootScopeEnter(scope: RootScopeContext) {}
 
+  /**
+   * Called when a scope is entered (excluding root scope).
+   * For root scope, see {@link onRootScopeEnter}.
+   */
   onScopeEnter(scope: ScopeContext) {}
 
+  /**
+   * Called when a scope (including root scope) exits successfully.
+   */
   onScopeExit(scope: ScopeContext) {}
+
+  /**
+   * Called when an exception is thrown withing a scope.
+   *
+   * Note: Will be called multiple times for a single error,
+   * if it occurred down in the hierarchy and scopes don't catch it.
+   * To identify whether the error was thrown in current scope,
+   * compare {@param scope} with {@param source}.
+   * TODO: Should AbortException be caught here?
+   *
+   * @param scope Current scope which errored
+   * @param source The scope which originally threw the error
+   * @param error The thrown error
+   */
+  onScopeError(scope: ScopeContext, source: ScopeContext, error: Error) {}
 
   static runCallback<TName extends keyof FeatureCallbacks>(
     name: TName,

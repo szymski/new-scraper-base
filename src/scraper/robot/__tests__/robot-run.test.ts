@@ -204,5 +204,60 @@ describe("Robot run tests", () => {
         })
       );
     });
+
+    test("Should call scope error callbacks", async () => {
+      class TestFeature extends Feature {
+        onScopeError(scope: ScopeContext, source: ScopeContext, error: Error) {}
+      }
+
+      class ExecRobot extends Robot {
+        @Entrypoint()
+        runIt() {
+          return this.entrypoint(async () => {
+            await this.scope1();
+          });
+        }
+
+        @Scope()
+        async scope1() {
+          await this.scope2();
+        }
+
+        @Scope()
+        async scope2() {
+          throw new Error("Scope2 error");
+        }
+      }
+
+      const robot = new ExecRobot();
+      const run = robot.runIt();
+      run.feature(TestFeature); // Bootstrap feature
+
+      const feature = Feature.getInstance(TestFeature);
+      const errorSpy = jest.spyOn(feature, "onScopeError");
+
+      await expect(run.start()).rejects.toThrowError("Scope2 error");
+
+      expect(errorSpy).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ name: "scope2" }),
+        expect.objectContaining({ name: "scope2" }),
+        expect.objectContaining({ message: "Scope2 error" })
+      );
+
+      expect(errorSpy).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ name: "scope1" }),
+        expect.objectContaining({ name: "scope2" }),
+        expect.objectContaining({ message: "Scope2 error" })
+      );
+
+      expect(errorSpy).toHaveBeenNthCalledWith(
+        3,
+        expect.objectContaining({ name: "runIt" }),
+        expect.objectContaining({ name: "scope2" }),
+        expect.objectContaining({ message: "Scope2 error" })
+      );
+    });
   });
 });

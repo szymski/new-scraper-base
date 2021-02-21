@@ -10,6 +10,7 @@ import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/root-scope-context";
 import { RobotOutputData } from "./types";
+import { ScopeException } from "../exceptions";
 
 export type RobotRunStatus =
   | "initial"
@@ -109,7 +110,15 @@ export class RobotRun<TData, TReturn> {
       const result = this.#fn()
         .catch((e) => {
           this.#status = "errored";
-          throw e;
+
+          if(e instanceof ScopeException) {
+            Feature.runCallback("onScopeError", this.#rootScope, e.scope, e);
+            throw e.original;
+          }
+          else {
+            Feature.runCallback("onScopeError", this.#rootScope, this.#rootScope, e);
+            throw e;
+          }
         })
         .finally(() => {
           Feature.runCallback("onScopeExit", this.#rootScope);

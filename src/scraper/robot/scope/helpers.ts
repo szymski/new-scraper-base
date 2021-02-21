@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { AbortedException } from "../../exceptions";
+import { AbortedException, ScopeException } from "../../exceptions";
 import { Feature } from "../feature";
 import { ScopeParamMetadata } from "../metadata-helpers";
 import { RootScopeContext } from "./root-scope-context";
@@ -51,10 +51,15 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
         // Promise.resolve is called here to ensure we always operate on a promise.
         // Without it, if scope didn't return a promise, the code would crash.
         Promise.resolve(callback.apply(this, params))
-          // .catch((e: any) => {
-          //   Logger.error(e);
-          //   throw e;
-          // })
+          .catch((e: any) => {
+            if (e instanceof ScopeException) {
+              Feature.runCallback("onScopeError", scope, e.scope, e);
+              throw e;
+            } else {
+              Feature.runCallback("onScopeError", scope, scope, e);
+              throw new ScopeException(scope, e);
+            }
+          })
           .then((result: any) => {
             scope.endDate = new Date();
             scope.totalDuration =
@@ -62,7 +67,7 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
             // this?.onScopeEnd(scope);
 
             // Only call callback on non-root scopes
-            if(scope.parent) {
+            if (scope.parent) {
               Feature.runCallback("onScopeExit", scope);
             }
 
