@@ -41,3 +41,15 @@ export function addClassMetadata(target: any, key: symbol, value: any) {
   params.push(value);
   Reflect.defineMetadata(key, params, target);
 }
+
+export function addMethodMetadata(
+  metadataKey: symbol,
+  target: any,
+  propertyKey: string | symbol,
+  value: any
+) {
+  const params: any[] =
+    Reflect.getOwnMetadata(metadataKey, target, propertyKey) || [];
+  params.push(value);
+  Reflect.defineMetadata(metadataKey, params, target, propertyKey);
+}

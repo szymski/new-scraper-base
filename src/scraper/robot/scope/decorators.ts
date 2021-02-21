@@ -1,5 +1,6 @@
 import {
   addClassMetadata,
+  addMethodMetadata,
   ClassMetadataKeys,
   getScopeParams,
   MethodMetadataKeys,
@@ -39,26 +40,16 @@ export function Scope(name?: string): MethodDecorator {
 
 // TODO: Get the param name automatically. I used to wonder why libraries often don't do that. Now I understand why.
 export function ScopeParam(name: string): ParameterDecorator {
-  return function (
-    target: Object,
-    propertyKey: string | symbol,
-    index: number
-  ) {
-    const params: ScopeParamMetadata[] =
-      Reflect.getOwnMetadata(
-        MethodMetadataKeys.ScopeParam,
-        target,
-        propertyKey
-      ) || [];
-    params.push({
+  return function (target: any, propertyKey: string | symbol, index: number) {
+    const metadata: ScopeParamMetadata = {
       index,
       name,
-    } as ScopeParamMetadata);
-    Reflect.defineMetadata(
+    };
+    addMethodMetadata(
       MethodMetadataKeys.ScopeParam,
-      params,
       target,
-      propertyKey
+      propertyKey,
+      metadata
     );
   };
 }

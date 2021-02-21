@@ -140,7 +140,9 @@ run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
 
 run
   .start()
-  .catch((e) => {})
+  .catch((e) => {
+    Logger.error(e);
+  })
   .then();
 
 setTimeout(() => {
