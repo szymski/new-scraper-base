@@ -11,7 +11,6 @@ import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
 import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
-import { DataFeature } from "../scraper/robot/feature/features/data";
 
 interface GameData {
   name: string;
@@ -108,11 +107,6 @@ run.callbacks.onDataReceived = (output) => {
 
 run.callbacks.onFinished = () => {
   Logger.info("onFinished");
-  // for (const key of Object.keys(
-  //   Parallel.getRootCheckpoints(run.rootScope).checkpoints
-  // )) {
-  //   Logger.error(key);
-  // }
 };
 
 let checkpoints: string[] = [];

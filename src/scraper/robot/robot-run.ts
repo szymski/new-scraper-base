@@ -1,3 +1,4 @@
+import { ScopeException } from "../exceptions";
 import { Logger } from "../util/logger";
 import { getEntrypointContext } from "./entrypoint";
 import {
@@ -10,7 +11,6 @@ import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/root-scope-context";
 import { RobotOutputData } from "./types";
-import { ScopeException } from "../exceptions";
 
 export type RobotRunStatus =
   | "initial"
@@ -35,6 +35,7 @@ export class RobotRun<TData, TReturn> {
 
   #status: RobotRunStatus = "initial";
   #rootScope: RootScopeContext;
+  #runPromise?: Promise<any>;
 
   #featureProperties = new Map<new () => Feature, FeatureRunProperties<any>>();
 
@@ -105,18 +106,22 @@ export class RobotRun<TData, TReturn> {
     this.#status = "running";
     Logger.verbose(`Running entrypoint ${this.#entrypointName}`);
 
-    const result = await runWithInitialScope(() => {
+    this.#runPromise = runWithInitialScope(() => {
       Feature.runCallback("onRootScopeEnter", this.#rootScope);
       const result = this.#fn()
         .catch((e) => {
           this.#status = "errored";
 
-          if(e instanceof ScopeException) {
+          if (e instanceof ScopeException) {
             Feature.runCallback("onScopeError", this.#rootScope, e.scope, e);
             throw e.original;
-          }
-          else {
-            Feature.runCallback("onScopeError", this.#rootScope, this.#rootScope, e);
+          } else {
+            Feature.runCallback(
+              "onScopeError",
+              this.#rootScope,
+              this.#rootScope,
+              e
+            );
             throw e;
           }
         })
@@ -125,6 +130,8 @@ export class RobotRun<TData, TReturn> {
         });
       return result;
     }, this.#rootScope);
+
+    const result = await this.#runPromise;
 
     this.#status = "finished";
     Logger.verbose(`Robot action '${this.#entrypointName}' finished`);
@@ -137,8 +144,11 @@ export class RobotRun<TData, TReturn> {
   /**
    * Cancels the execution and invokes onCancelled callback.
    * Cancellation is realised by using {@link RootScopeContext.abortController}.
+   * @param timeout How long to wait for robot to finish in milliseconds.
+   * Will wait indefinitely if undefined.
+   * @returns Boolean indicating whether the cancellation was successful (it didn't timeout)
    */
-  async cancel(): Promise<void> {
+  async cancel(timeout: number | undefined = 30_000): Promise<boolean> {
     // TODO: Consider waiting for all scopes to exit/throw before calling
     if (this.#status !== "running") {
       throw new Error(
@@ -148,11 +158,49 @@ export class RobotRun<TData, TReturn> {
       );
     }
 
-    Logger.verbose("Cancelling run...");
-    this.#status = "cancelled";
     this.#rootScope.abortController.abort();
 
+    let success: boolean;
+
+    // If timeout is set to zero, don't wait at all
+    if (timeout == 0) {
+      Logger.verbose("Cancelling immediately");
+      success = true;
+    }
+    // If it's undefined, wait indefinitely
+    else if (timeout === undefined) {
+      Logger.verbose("Waiting for robot to finish...");
+      success = true;
+      await this.#runPromise!;
+      Logger.verbose("Cancelled");
+    }
+    // If timeout is set, wait with a timeout
+    else {
+      Logger.verbose(
+        `Waiting for robot to finish with a timeout of ${timeout}ms...`
+      );
+
+      success = await Promise.race([
+        this.#runPromise!.catch(() => true).then(() => true),
+        new Promise<boolean>((resolve) => {
+          setTimeout(() => resolve(false), timeout);
+        }),
+      ]);
+
+      if (success) {
+        Logger.verbose("Cancelled successfully");
+      } else {
+        Logger.verbose(
+          "Cancellation timed out. Some tasks might still be active."
+        );
+      }
+    }
+
+    this.#status = "cancelled";
+
     this.callbacks.onCancelled();
+
+    return success;
   }
 
   readonly callbacks = {
