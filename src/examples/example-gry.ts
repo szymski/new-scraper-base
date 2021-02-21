@@ -1,16 +1,13 @@
-import colors from "colors";
-import * as fs from "fs";
 import "reflect-metadata";
 import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
 import { Entrypoint } from "../scraper/robot/entrypoint";
 import { CheckpointFeature } from "../scraper/robot/feature/features/checkpoint";
-import { ProgressFeature } from "../scraper/robot/feature/features/progress";
 import { parallel } from "../scraper/robot/parallel";
-import { ProgressTracker } from "../scraper/robot/progress-tracker";
 import { Robot } from "../scraper/robot/robot";
 import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
+import { ProgressFeature } from "../scraper/robot/feature/features/progress";
 
 interface GameData {
   name: string;
@@ -100,30 +97,18 @@ const test = new TestRobot();
 const run = test.scrapAllCategories();
 
 run.feature(CheckpointFeature).useFile("checkpoints.json");
+run.feature(ProgressFeature).enableLogging();
 
 run.callbacks.onDataReceived = (output) => {
-  Logger.info(output);
+  // Logger.info(output);
 };
 
 run.callbacks.onFinished = () => {
   Logger.info("onFinished");
 };
 
-run.feature(ProgressFeature).callbacks.onProgress = (tracker, scope) => {
-  const rootNode = scope.root
-    .feature(ProgressFeature)
-    .trackerTree.getRootNode();
-  Logger.color(
-    colors.green,
-    "\n" + ProgressTracker.renderProgressTree(rootNode)
-  );
-};
-
-run
-  .start()
-  .catch()
-  .then();
+run.start().catch().then();
 
 setTimeout(() => {
   run.cancel().then(() => {});
-}, 5_000);
+}, 20_000);

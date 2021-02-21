@@ -26,7 +26,6 @@ export class TimerFeature extends Feature {
   }
 
   onScopeExit(scope: ScopeContext) {
-    console.log("Exited");
     this.cleanScopeTimers();
   }
 
