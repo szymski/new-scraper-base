@@ -27,3 +27,9 @@ export function sleepAsync(ms: number) {
     setTimeout(resolve, ms);
   });
 }
+
+export function nextTickAsync() {
+  return new Promise((resolve) => {
+    process.nextTick(resolve);
+  });
+}

@@ -24,9 +24,8 @@ export class FeatureScopeVariableDescriptor<T> {
   get value(): T | undefined {
     const scope = getCurrentScope();
 
-    let value = this.type === "root"
-      ? scope.root.get<T>(this.id)
-      : scope.get<T>(this.id);
+    let value =
+      this.type === "root" ? scope.root.get<T>(this.id) : scope.get<T>(this.id);
 
     if (value === undefined && this.defaultInitializer) {
       value = this.defaultInitializer(scope);
