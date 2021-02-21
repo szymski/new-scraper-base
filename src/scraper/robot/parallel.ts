@@ -1,5 +1,5 @@
 import async from "async";
-import { Logger } from "../util/logger";
+import { AbortedException } from "../exceptions";
 import {
   CheckpointContainer,
   CheckpointFeature,
@@ -55,6 +55,7 @@ export class Parallel {
 
     await async
       .eachLimit(elements, this.#taskLimit, async (item) => {
+        this.throwIfAborted(scope);
         await this.wrapElement(item, tracker, async () => await fn(item));
       })
       .finally(() => {
@@ -80,6 +81,7 @@ export class Parallel {
 
     await async
       .timesLimit(end - start, this.#taskLimit, async (n) => {
+        this.throwIfAborted(scope);
         await this.wrapElement(n, tracker, async () => await fn(start + n));
       })
       .finally(() => {
@@ -103,6 +105,7 @@ export class Parallel {
     // TODO: Implement concurrency for unknown sequence lengths
     try {
       for (let i = start; ; i++) {
+        this.throwIfAborted(scope);
         const shouldContinue = await this.wrapElement<boolean>(
           i,
           tracker,
@@ -127,6 +130,12 @@ export class Parallel {
     tracker.increase();
 
     return result;
+  }
+
+  private throwIfAborted(scope: ScopeContext) {
+    if (scope.root.abortController.signal.aborted) {
+      throw new AbortedException();
+    }
   }
 }
 
