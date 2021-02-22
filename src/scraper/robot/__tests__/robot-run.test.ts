@@ -153,13 +153,16 @@ describe("Robot run tests", () => {
 
         run.start().then();
 
+        expect(run.status).toEqual("running");
         expect(robot.counter).toEqual(1);
 
         const cancelPromise = run
           .cancel()
           .then((success) => [success, robot.counter]);
 
+        expect(run.status).toEqual("cancelling");
         await expect(cancelPromise).resolves.toEqual([true, 3]);
+        expect(run.status).toEqual("cancelled");
       });
 
       test("Should cancel using abort controller", async () => {
