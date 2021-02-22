@@ -33,6 +33,8 @@ export class TimerFeature extends Feature {
     this.cleanScopeTimers();
   }
 
+  // TODO: Add on run cancelled callbacks and cancel all timers
+
   private cleanScopeTimers() {
     for (const timeout of this.timeouts.value!.values()) {
       clearTimeout(timeout);

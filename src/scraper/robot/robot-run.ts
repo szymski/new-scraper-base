@@ -7,6 +7,7 @@ import {
   mapFeatureToRunProperties,
 } from "./feature";
 import { DataFeature } from "./feature/features/data";
+import { Process } from "./process";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/root-scope-context";
@@ -17,6 +18,7 @@ export type RobotRunStatus =
   | "running"
   | "finished"
   | "errored"
+  | "cancelling"
   | "cancelled";
 
 /**
@@ -106,6 +108,8 @@ export class RobotRun<TData, TReturn> {
     this.#status = "running";
     Logger.verbose(`Running entrypoint ${this.#entrypointName}`);
 
+    Process.registerRobotRun(this);
+
     this.#runPromise = runWithInitialScope(() => {
       Feature.runCallback("onRootScopeEnter", this.#rootScope);
       const result = this.#fn()
@@ -126,7 +130,9 @@ export class RobotRun<TData, TReturn> {
           }
         })
         .finally(() => {
+          // TODO: Should scope exit be called if root scope errors?
           Feature.runCallback("onScopeExit", this.#rootScope);
+          Process.unregisterRobotRun(this);
         });
       return result;
     }, this.#rootScope);
@@ -157,6 +163,8 @@ export class RobotRun<TData, TReturn> {
         }'`
       );
     }
+
+    this.#status = "cancelling";
 
     this.#rootScope.abortController.abort();
 
@@ -195,6 +203,8 @@ export class RobotRun<TData, TReturn> {
         );
       }
     }
+
+    Process.unregisterRobotRun(this);
 
     this.#status = "cancelled";
 

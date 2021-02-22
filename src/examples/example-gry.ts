@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { AbortedException } from "../scraper/exceptions";
 import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
 import { Entrypoint } from "../scraper/robot/entrypoint";
@@ -86,15 +87,18 @@ run.feature(CheckpointFeature).useFile("checkpoints.json");
 run.feature(ProgressFeature).enableLogging();
 
 run.callbacks.onDataReceived = (output) => {
-  Logger.info(output);
+  // Logger.info(output);
 };
 
 run.callbacks.onFinished = () => {
   Logger.info("onFinished");
 };
 
-run.start().catch().then();
-
-setTimeout(() => {
-  run.cancel().then(() => {});
-}, 20_000);
+run
+  .start()
+  .catch((e) => {
+    if (!(e instanceof AbortedException)) {
+      Logger.error(e);
+    }
+  })
+  .then();

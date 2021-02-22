@@ -121,7 +121,11 @@ export class Parallel {
         if (Number.isInteger(returned)) {
           max = returned as number;
           tracker.setMax(max);
-        } else if (!returned) {
+        }
+        // We only break the loop if returned value is false precisely.
+        // Checkpoint function wrapper might ignore it and return undefined.
+        // In that case we don't know if there are any items there and we have to continue.
+        else if (returned === false) {
           break;
         }
       }
