@@ -41,13 +41,15 @@ export class ProgressFeature extends Feature {
   }
 
   onRootScopeEnter(scope: RootScopeContext) {
-    scope.feature(TimerFeature).setInterval(() => {
-      const rootNode = this.trackerTree.getRootNode();
-      Logger.color(
-        colors.bold,
-        "\n" + ProgressTracker.renderProgressTree(rootNode)
-      );
-    }, 1_000);
+    if (this.enableLogging.value) {
+      scope.feature(TimerFeature).setInterval(() => {
+        const rootNode = this.trackerTree.getRootNode();
+        Logger.color(
+          colors.bold,
+          "\n" + ProgressTracker.renderProgressTree(rootNode)
+        );
+      }, 1_000);
+    }
   }
 
   init_enableLogging(config: FeatureConfiguration) {
