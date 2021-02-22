@@ -1,13 +1,9 @@
-import "reflect-metadata";
 import { AbortedException } from "../scraper/exceptions";
 import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
-import { Entrypoint } from "../scraper/robot/entrypoint";
-import { CheckpointFeature } from "../scraper/robot/feature/features/checkpoint";
-import { ProgressFeature } from "../scraper/robot/feature/features/progress";
+import { Entrypoint, Robot, Scope, ScopeParam } from "../scraper/robot";
+import { CheckpointFeature, ProgressFeature } from "../scraper/robot/feature";
 import { parallel } from "../scraper/robot/parallel";
-import { Robot } from "../scraper/robot/robot";
-import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
 
 interface GameData {

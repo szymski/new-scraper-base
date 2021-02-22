@@ -5,3 +5,4 @@ export {
   FeatureRunProperties,
   mapFeatureToRunProperties,
 } from "./feature-run-properties";
+export * from "./features";
