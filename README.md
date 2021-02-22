@@ -46,6 +46,7 @@ Features I am planning to add:
     - Auto login form recognition
     - Table parser
     - Pagination recognizer
+        - ✔ ~~Binary search for page count~~
     - Element anchoring (be resistant to CSS/HTML changes)
 - Conditions - only perform actions when a certain condition is met, if it's not, satisfy it
 

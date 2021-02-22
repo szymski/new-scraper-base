@@ -5,6 +5,8 @@ import { Entrypoint, Robot, Scope, ScopeParam } from "../scraper/robot";
 import { CheckpointFeature, ProgressFeature } from "../scraper/robot/feature";
 import { parallel } from "../scraper/robot/parallel";
 import { Logger } from "../scraper/util/logger";
+import has = Reflect.has;
+import { findPageCount } from "../scraper/robot/util/find-page-count";
 
 interface GameData {
   name: string;
@@ -35,9 +37,19 @@ class TestRobot extends Robot {
 
   @Scope("category")
   private async scrapCategory(@ScopeParam("url") url: string) {
-    await parallel().countWhile(1, async (page) => {
-      return await this.scrapCategoryPage(url, page);
-    });
+    const pageCount = await findPageCount((page) =>
+      this.pageHasItems(url, page)
+    );
+
+    await parallel()
+      .setLimit(4)
+      .for(1, pageCount + 1, async (page) => {
+        return await this.scrapCategoryPage(url, page);
+      });
+
+    // await parallel().countWhile(1, async (page) => {
+    //   return await this.scrapCategoryPage(url, page);
+    // });
   }
 
   @Scope("page")
@@ -73,6 +85,14 @@ class TestRobot extends Robot {
     };
 
     this.onDataReceived("game", game);
+  }
+
+  private async pageHasItems(url: string, page: number) {
+    const $ = await this.client.get(`${url}/${page}`).cheerio();
+    const gameUrls = $("#kategoria h2 a")
+      .toArray()
+      .map((x) => $(x).attr("href")!);
+    return gameUrls.length > 0;
   }
 }
 
