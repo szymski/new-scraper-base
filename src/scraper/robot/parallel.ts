@@ -91,10 +91,15 @@ export class Parallel {
 
   /**
    * Parallelize actions performed in a for loop, without known sequence length.
-   * The callback should return a boolean value which indicates if execution should be continued.
+   *
+   * The callback should return a boolean value which indicates if execution should be continued
+   * or a number which indicates the maximum number (inclusive).
    * @param fn Function to run for each element
    */
-  async countWhile<T>(start: number, fn: (i: number) => Promise<boolean>) {
+  async countWhile(
+    start: number,
+    fn: (i: number) => Promise<boolean | number>
+  ) {
     const scope = getCurrentScope();
 
     const tracker = scope.feature(ProgressFeature).create({
@@ -102,16 +107,21 @@ export class Parallel {
       start: start,
     });
 
+    let max: number | undefined;
+
     // TODO: Implement concurrency for unknown sequence lengths
     try {
-      for (let i = start; ; i++) {
+      for (let i = start; max ? i <= max : true; i++) {
         this.throwIfAborted(scope);
-        const shouldContinue = await this.wrapElement<boolean>(
+        const returned = await this.wrapElement<boolean | number>(
           i,
           tracker,
           async () => await fn(i)
         );
-        if (!shouldContinue) {
+        if (Number.isInteger(returned)) {
+          max = returned as number;
+          tracker.setMax(max);
+        } else if (!returned) {
           break;
         }
       }
@@ -124,7 +134,7 @@ export class Parallel {
     item: any,
     tracker: ProgressTracker,
     fn: () => Promise<T>
-  ) {
+  ): Promise<T> {
     const result = await this.#checkpointContainer.runForItem(item, fn);
 
     tracker.increase();

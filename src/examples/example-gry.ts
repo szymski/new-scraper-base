@@ -3,11 +3,11 @@ import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
 import { Entrypoint } from "../scraper/robot/entrypoint";
 import { CheckpointFeature } from "../scraper/robot/feature/features/checkpoint";
+import { ProgressFeature } from "../scraper/robot/feature/features/progress";
 import { parallel } from "../scraper/robot/parallel";
 import { Robot } from "../scraper/robot/robot";
 import { Scope, ScopeParam } from "../scraper/robot/scope";
 import { Logger } from "../scraper/util/logger";
-import { ProgressFeature } from "../scraper/robot/feature/features/progress";
 
 interface GameData {
   name: string;
@@ -30,31 +30,17 @@ class TestRobot extends Robot {
         .toArray()
         .map((x) => $(x).attr("href")!);
 
-      await parallel()
-        .setLimit(1)
-        .forEach(categoryUrls, async (url) => {
-          await this.scrapCategory(url);
-        });
+      await parallel().forEach(categoryUrls, async (url) => {
+        await this.scrapCategory(url);
+      });
     });
   }
 
   @Scope("category")
   private async scrapCategory(@ScopeParam("url") url: string) {
-    // await parallel().countWhile(1, async (page) => {
-    //   return await this.scrapCategoryPage(url, page);
-    // });
-
-    await parallel()
-      .setLimit(1)
-      .for(1, 16, async (page) => {
-        await this.scrapCategoryPage(url, page);
-      });
-
-    // for (let page = 1; page < 15; page++) {
-    //   if (!(await this.scrapCategoryPage(url, page))) {
-    //     return;
-    //   }
-    // }
+    await parallel().countWhile(1, async (page) => {
+      return await this.scrapCategoryPage(url, page);
+    });
   }
 
   @Scope("page")
@@ -67,17 +53,17 @@ class TestRobot extends Robot {
       .toArray()
       .map((x) => $(x).attr("href")!);
 
-    await parallel()
-      .setLimit(1)
-      .forEach(gameUrls, async (url) => {
-        await this.scrapGame(url);
-      });
+    const maxPage = Number(
+      $(".pages:last-child")
+        .text()
+        .match(/([0-9]+)(,|\s|>)+?$/)![1]
+    );
 
-    // for (const url of gameUrls) {
-    //   await this.scrapGame(url);
-    // }
+    await parallel().forEach(gameUrls, async (url) => {
+      await this.scrapGame(url);
+    });
 
-    return gameUrls.length > 0;
+    return gameUrls.length > 0 ? maxPage : false;
   }
 
   @Scope("game")
@@ -100,7 +86,7 @@ run.feature(CheckpointFeature).useFile("checkpoints.json");
 run.feature(ProgressFeature).enableLogging();
 
 run.callbacks.onDataReceived = (output) => {
-  // Logger.info(output);
+  Logger.info(output);
 };
 
 run.callbacks.onFinished = () => {

@@ -39,6 +39,10 @@ export class ProgressTracker {
     }
   }
 
+  setMax(max: number) {
+    this.options.max = max;
+  }
+
   finish() {
     this.finished = true;
     if (this.options.onUpdate) {

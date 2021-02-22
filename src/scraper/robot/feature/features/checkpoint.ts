@@ -5,6 +5,8 @@ import { ScopeContext } from "../../scope/scope-context";
 import { FeatureConfiguration } from "../configuration";
 import { Feature } from "../feature-class";
 
+// TODO: When a checkpoint is restored, progress tracker shouldn't take restored items into account when calculating speed
+
 export class CheckpointContainer {
   constructor(
     private readonly feature: CheckpointFeature,
@@ -111,9 +113,9 @@ export class CheckpointFeature extends Feature {
   }
 
   onScopeExit(scope: ScopeContext) {
-    if(scope instanceof RootScopeContext) {
+    if (scope instanceof RootScopeContext) {
       const filename = this.checkpointsFilename.value;
-      if(filename) {
+      if (filename) {
         Logger.verbose(`Saving checkpoints to ${filename}`);
         const serialized = JSON.stringify(this.checkpoints.value, null, "\t");
         fs.writeFileSync(filename, serialized);
