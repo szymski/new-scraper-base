@@ -1,13 +1,7 @@
 import { AbortedException } from "../scraper/exceptions";
 import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
-import {
-  Entrypoint,
-  getCurrentScope,
-  Robot,
-  Scope,
-  ScopeParam,
-} from "../scraper/robot";
+import { Entrypoint, Robot, scope, Scope, ScopeParam } from "../scraper/robot";
 import {
   CheckpointFeature,
   ProgressFeature,
@@ -96,7 +90,7 @@ class TestRobot extends Robot {
     };
 
     // this.onDataReceived("game", game);
-    getCurrentScope().feature(GameDataFeature).reportData(game);
+    scope.feature(GameDataFeature).reportData(game);
   }
 
   private async pageHasItems(url: string, page: number) {
