@@ -1,8 +1,18 @@
 import { AbortedException } from "../scraper/exceptions";
 import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
-import { Entrypoint, Robot, Scope, ScopeParam } from "../scraper/robot";
-import { CheckpointFeature, ProgressFeature } from "../scraper/robot/feature/features";
+import {
+  Entrypoint,
+  getCurrentScope,
+  Robot,
+  Scope,
+  ScopeParam,
+} from "../scraper/robot";
+import {
+  CheckpointFeature,
+  ProgressFeature,
+} from "../scraper/robot/feature/features";
+import { defineOutputData } from "../scraper/robot/feature/features/data";
 import { parallel } from "../scraper/robot/parallel";
 import { findPageCount } from "../scraper/robot/util/find-page-count";
 import { Logger } from "../scraper/util/logger";
@@ -11,6 +21,8 @@ interface GameData {
   name: string;
   category: string;
 }
+
+const GameDataFeature = defineOutputData<GameData>();
 
 class TestRobot extends Robot {
   private client = new HttpClient(new NodeFetchPerformer());
@@ -83,7 +95,8 @@ class TestRobot extends Robot {
       category: $(".left > a:nth-of-type(2)").text(),
     };
 
-    this.onDataReceived("game", game);
+    // this.onDataReceived("game", game);
+    getCurrentScope().feature(GameDataFeature).reportData(game);
   }
 
   private async pageHasItems(url: string, page: number) {
@@ -101,8 +114,8 @@ const run = test.scrapAllCategories();
 run.feature(CheckpointFeature).useFile("checkpoints.json");
 run.feature(ProgressFeature).enableLogging();
 
-run.callbacks.onDataReceived = (output) => {
-  // Logger.info(output);
+run.feature(GameDataFeature).callbacks.onDataReceived = (data) => {
+  // console.log(data);
 };
 
 run.callbacks.onFinished = () => {
