@@ -1,7 +1,7 @@
 import {
   getMethodInjectionMetadata,
   Inject,
-  invokeAndInjectParams,
+  invokeMethodAndInjectParams,
 } from "../parameter-injector";
 
 describe("Parameter injector tests", () => {
@@ -79,12 +79,12 @@ describe("Parameter injector tests", () => {
     const a = new A();
 
     test("Should inject undefined if parameter not provided", () => {
-      const result = invokeAndInjectParams(a, "func", {}, []);
+      const result = invokeMethodAndInjectParams(a, "func", {}, []);
       expect(result).toEqual([undefined]);
     });
 
     test("Should inject parameter if provided", () => {
-      const result = invokeAndInjectParams(
+      const result = invokeMethodAndInjectParams(
         a,
         "func",
         {
@@ -96,7 +96,7 @@ describe("Parameter injector tests", () => {
     });
 
     test("Should inject multiple parameters and preserve other params", () => {
-      const result = invokeAndInjectParams(
+      const result = invokeMethodAndInjectParams(
         a,
         "func2",
         {
@@ -110,7 +110,7 @@ describe("Parameter injector tests", () => {
 
     test("Should preserve this", () => {
       a.field = 321;
-      const result = invokeAndInjectParams(
+      const result = invokeMethodAndInjectParams(
         a,
         "func3",
         {
@@ -124,7 +124,7 @@ describe("Parameter injector tests", () => {
     test("Should do lazy initialization of a parameter", () => {
       const initializer = jest.fn(() => 5);
 
-      const result = invokeAndInjectParams(
+      const result = invokeMethodAndInjectParams(
         a,
         "func",
         {
@@ -140,7 +140,7 @@ describe("Parameter injector tests", () => {
     test("Should skip lazy initialization of a parameter if it's not present", () => {
       const initializer = jest.fn(() => 5);
 
-      const result = invokeAndInjectParams(
+      const result = invokeMethodAndInjectParams(
         a,
         "func",
         {
@@ -174,14 +174,14 @@ describe("Parameter injector tests", () => {
       });
 
       test("Should use provider defined in the decorator", () => {
-        const result = invokeAndInjectParams(b, "func", {}, []);
+        const result = invokeMethodAndInjectParams(b, "func", {}, []);
 
         expect(result).toEqual("hello");
         expect(providerFn).toBeCalledTimes(1);
       });
 
       test("Should override provider defined in the decorator", () => {
-        const result = invokeAndInjectParams(
+        const result = invokeMethodAndInjectParams(
           b,
           "func",
           {

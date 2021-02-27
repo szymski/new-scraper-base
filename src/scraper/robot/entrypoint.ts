@@ -13,8 +13,12 @@ interface EntrypointContext {
 
 const entrypointStorage = new AsyncLocalStorage<EntrypointContext>();
 
-export function Entrypoint(name?: string): MethodDecorator {
-  return (target, propertyKey, descriptor) => {
+export function Entrypoint(name?: string) {
+  return <T extends number | any>(
+    target: Object,
+    propertyKey: string | symbol,
+    descriptor: TypedPropertyDescriptor<T>
+  ) => {
     const context: EntrypointContext = {
       name: name ?? propertyKey.toString(),
     };
@@ -32,6 +36,8 @@ export function Entrypoint(name?: string): MethodDecorator {
         original.apply(robot, params)
       );
     } as any;
+
+    descriptor.writable = false;
   };
 }
 

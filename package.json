@@ -10,7 +10,8 @@
     "example2": "ts-node src/example2.ts",
     "example:gry": "ts-node src/examples/example-gry.ts",
     "example:gry-tree": "ts-node src/examples/example-gry-tree.ts",
-    "example:progress": "ts-node src/examples/example-progress.ts"
+    "example:progress": "ts-node src/examples/example-progress.ts",
+    "example:injection": "ts-node src/examples/example-injection.ts"
   },
   "author": "",
   "license": "ISC",

@@ -1,4 +1,8 @@
 import {
+  getMethodInjectionMetadata,
+  invokeFunctionAndInjectParams,
+} from "../../util/parameter-injector";
+import {
   addClassMetadata,
   addMethodMetadata,
   ClassMetadataKeys,
@@ -26,11 +30,24 @@ export function Scope(name?: string): MethodDecorator {
       target,
       propertyKey
     );
+
     const methodParams = getScopeParams(target, propertyKey);
+
     const original = <any>descriptor.value;
+    const injectionMetadata = getMethodInjectionMetadata(target, propertyKey);
+
+    const wrappedWithInjection = (thisArg: any, args: any[]) => () =>
+      invokeFunctionAndInjectParams(
+        thisArg,
+        original,
+        injectionMetadata,
+        {},
+        args
+      );
+
     descriptor.value = <any>function (this: any, ...args: any[]) {
       return wrapWithScope(
-        original,
+        wrappedWithInjection(this, args),
         name ?? propertyKey.toString(),
         methodParams
       ).apply(this, args);

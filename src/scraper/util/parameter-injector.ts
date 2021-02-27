@@ -15,7 +15,7 @@ export type InjectedParamMetadata = {
 
 /**
  * Decorator which indicates that a parameter should be injected when
- * the function is invoked using {@link invokeAndInjectParams}.
+ * the function is invoked using {@link invokeMethodAndInjectParams}.
  * @param type Type of the parameter, an identifier which allows to provide data when invoking.
  * @param provider Optional value provider. Initializes the value to be injected, if it's not provided on invocation.
  * @constructor
@@ -65,12 +65,12 @@ type ClassMethodNames<T> = {
  * @param params Parameters to invoke the method with. Parameters which are supposed to be injected
  * can be skipped by replacing them with null or undefined.
  */
-export function invokeAndInjectParams<
+export function invokeMethodAndInjectParams<
   TClass extends {},
   MethodName extends ClassMethodNames<TClass>
 >(
   thisArg: TClass & ClassMethods<TClass>,
-  methodName: MethodName,
+  methodName: MethodName | symbol,
   providers: Record<string, any>,
   params: TClass[MethodName] extends (...args: infer Params) => any
     ? Partial<Params>
@@ -78,7 +78,7 @@ export function invokeAndInjectParams<
 ): TClass[MethodName] extends (...args: any[]) => any
   ? ReturnType<TClass[MethodName]>
   : never {
-  const method: any = thisArg[methodName];
+  const method: any = (thisArg as any)[methodName];
   const paramsMetadata = getMethodInjectionMetadata(
     Object.getPrototypeOf(thisArg),
     methodName as string
@@ -92,4 +92,35 @@ export function invokeAndInjectParams<
   }
 
   return method.apply(thisArg, params);
+}
+
+/**
+ * Invokes a function and injects parameters marked with injection decorator {@link Inject}.
+ * @param thisArg This object
+ * @param fn Function to invoke
+ * @param paramsMetadata Information about injected parameters
+ * @param providers A dictionary where key is the injection type identifier and value is the value to inject.
+ * If you need lazy initialization, the value can also be a function - in that case, its return value
+ * will be evaluated only if the method accepts injected parameter of a given type.
+ * @param params Parameters to invoke the method with. Parameters which are supposed to be injected
+ * can be skipped by replacing them with null or undefined.
+ */
+// TODO: Tests
+export function invokeFunctionAndInjectParams<
+  TFunc extends (...args: any[]) => any
+>(
+  thisArg: any | null,
+  fn: TFunc,
+  paramsMetadata: InjectedParamMetadata[],
+  providers: Record<string, any>,
+  params: TFunc extends (...args: infer Params) => any ? Partial<Params> : never
+): ReturnType<TFunc> {
+  for (const { index, type, provider: decoratorProvider } of paramsMetadata) {
+    // First take local provider, then decorator-level provider
+    const provider = providers[type] ?? decoratorProvider;
+    // If provider is a function, use its return value
+    params[index] = typeof provider === "function" ? provider() : provider;
+  }
+
+  return fn.apply(thisArg, params);
 }
