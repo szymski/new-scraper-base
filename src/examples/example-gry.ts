@@ -2,7 +2,7 @@ import { AbortedException } from "../scraper/exceptions";
 import { HttpClient } from "../scraper/http-client/http-client";
 import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch-performer";
 import { Entrypoint, Robot, Scope, ScopeParam } from "../scraper/robot";
-import { CheckpointFeature, ProgressFeature } from "../scraper/robot/feature";
+import { CheckpointFeature, ProgressFeature } from "../scraper/robot/feature/features";
 import { parallel } from "../scraper/robot/parallel";
 import { findPageCount } from "../scraper/robot/util/find-page-count";
 import { Logger } from "../scraper/util/logger";

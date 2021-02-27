@@ -1,6 +1,6 @@
+import { Feature } from "../feature-class";
 import { ScopeContext } from "../../scope/scope-context";
 import { FeatureConfiguration } from "../configuration";
-import { Feature } from "../feature-class";
 import { mapFeatureToRunProperties } from "../feature-run-properties";
 
 describe("Feature run properties tests", () => {

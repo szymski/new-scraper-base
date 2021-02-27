@@ -1,6 +1,6 @@
-import { DataFeature } from "./feature";
 import { RobotRun } from "./robot-run";
 import { getCurrentScope } from "./scope";
+import { DataFeature } from "./feature/features";
 
 export class Robot {
   entrypoint<TData, TReturn = any>(
