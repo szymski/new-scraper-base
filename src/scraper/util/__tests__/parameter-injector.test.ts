@@ -98,6 +98,39 @@ describe("Parameter injector tests", () => {
       );
       expect(result).toEqual([321, "injected"]);
     });
+
+    test("Should do lazy initialization of a parameter", () => {
+      const initializer = jest.fn(() => 5);
+
+      const result = invokeAndInjectParams(
+        a,
+        "func",
+        {
+          "param-a": initializer,
+        },
+        []
+      );
+
+      expect(result).toEqual([5]);
+      expect(initializer).toBeCalledTimes(1);
+    });
+
+    test("Should skip lazy initialization of a parameter if it's not present", () => {
+      const initializer = jest.fn(() => 5);
+
+      const result = invokeAndInjectParams(
+        a,
+        "func",
+        {
+          "param-a": 10,
+          "param-b": initializer,
+        },
+        []
+      );
+
+      expect(result).toEqual([10]);
+      expect(initializer).toBeCalledTimes(0);
+    });
   });
 });
 

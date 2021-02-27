@@ -38,6 +38,16 @@ type ClassMethodNames<T> = {
 }[keyof T] &
   string;
 
+/**
+ * Invokes a class method and injects parameters marked with injection decorators.
+ * @param thisArg Class instance
+ * @param methodName Name of the method to invoke
+ * @param providers A dictionary where key is the injection type identifier and value is the value to inject.
+ * If you need lazy initialization, the value can also be a function - in that case, its return value
+ * will be evaluated only if the method accepts injected parameter of a given type.
+ * @param params Parameters to invoke the method with. Parameters which are supposed to be injected
+ * can be skipped by replacing them with null or undefined.
+ */
 export function invokeAndInjectParams<
   TClass extends {},
   MethodName extends ClassMethodNames<TClass>
@@ -58,7 +68,8 @@ export function invokeAndInjectParams<
   );
 
   for (const { index, type } of paramsMetadata) {
-    params[index] = providers[type];
+    const provider = providers[type];
+    params[index] = typeof provider === "function" ? provider() : provider;
   }
 
   return method.apply(thisArg, params);
