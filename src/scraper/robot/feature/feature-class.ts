@@ -3,11 +3,11 @@ import { ScopeContext } from "../scope/scope-context";
 import {
   FeatureCallbackDescriptor,
   FeatureScopeVariableDescriptor,
+  InitialVariableDescriptor,
+  ScopeDataTree,
 } from "./descriptors";
-import { InitialVariableDescriptor } from "./descriptors/initial-variable-descriptor";
-import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
-import { RootScopeVariableDescriptor } from "./descriptors/scope-variable-descriptor";
 import { OutputVariableDescriptor } from "./descriptors/output-variable-descriptor";
+import { RootScopeVariableDescriptor } from "./descriptors/scope-variable-descriptor";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
@@ -96,7 +96,7 @@ export abstract class Feature implements FeatureCallbacks {
     return new OutputVariableDescriptor<T>(
       this.selfConstructor,
       name,
-      defaultInitializer,
+      defaultInitializer
     );
   }
 

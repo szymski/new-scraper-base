@@ -1,4 +1,4 @@
-import { DataFeature } from "./feature/features/data";
+import { DataFeature } from "./feature";
 import { RobotRun } from "./robot-run";
 import { getCurrentScope } from "./scope";
 

@@ -4,9 +4,8 @@ import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch
 import { Entrypoint, Robot, Scope, ScopeParam } from "../scraper/robot";
 import { CheckpointFeature, ProgressFeature } from "../scraper/robot/feature";
 import { parallel } from "../scraper/robot/parallel";
-import { Logger } from "../scraper/util/logger";
-import has = Reflect.has;
 import { findPageCount } from "../scraper/robot/util/find-page-count";
+import { Logger } from "../scraper/util/logger";
 
 interface GameData {
   name: string;

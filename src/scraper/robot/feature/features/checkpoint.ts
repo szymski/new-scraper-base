@@ -1,9 +1,9 @@
+import { Feature } from "../feature-class";
 import * as fs from "fs";
 import { Logger } from "../../../util/logger";
 import { RootScopeContext } from "../../scope/root-scope-context";
 import { ScopeContext } from "../../scope/scope-context";
 import { FeatureConfiguration } from "../configuration";
-import { Feature } from "../feature-class";
 
 // TODO: When a checkpoint is restored, progress tracker shouldn't take restored items into account when calculating speed
 
