@@ -1,35 +1,57 @@
 import {
-  getMethodInjectedParams,
-  InjectParam,
+  getMethodInjectionMetadata,
+  Inject,
   invokeAndInjectParams,
 } from "../parameter-injector";
 
 describe("Parameter injector tests", () => {
   function InjectA(): ParameterDecorator {
-    return InjectParam("param-a");
+    return Inject("param-a");
   }
 
   function InjectB(): ParameterDecorator {
-    return InjectParam("param-b");
+    return Inject("param-b");
   }
 
-  test("Should get info about injected params", () => {
-    class A {
-      func(
-        @InjectA() asd: string,
-        nonInjected: boolean,
-        @InjectB() asdf: number
-      ) {}
-    }
+  describe("Metadata", () => {
+    test("Should get info about injected params", () => {
+      class A {
+        func(
+          @InjectA() asd: string,
+          nonInjected: boolean,
+          @InjectB() asdf: number
+        ) {}
+      }
 
-    const injectedParams = getMethodInjectedParams(A.prototype, "func");
+      const injectedParams = getMethodInjectionMetadata(A.prototype, "func");
 
-    expect(injectedParams).toEqual(
-      expect.arrayContaining([
-        { type: "param-a", index: 0 },
-        { type: "param-b", index: 2 },
-      ])
-    );
+      expect(injectedParams).toEqual(
+        expect.arrayContaining([
+          { type: "param-a", index: 0 },
+          { type: "param-b", index: 2 },
+        ])
+      );
+    });
+
+    test("Should get info about injected params with lazy provider", () => {
+      const providerFn = () => 123;
+
+      function InjectC(): ParameterDecorator {
+        return Inject("param-c", providerFn);
+      }
+
+      class A {
+        func(@InjectC() c: string) {}
+      }
+
+      const injectedParams = getMethodInjectionMetadata(A.prototype, "func");
+
+      expect(injectedParams).toEqual(
+        expect.arrayContaining([
+          { type: "param-c", index: 0, provider: providerFn },
+        ])
+      );
+    });
   });
 
   describe("Function invocation", () => {
@@ -130,6 +152,47 @@ describe("Parameter injector tests", () => {
 
       expect(result).toEqual([10]);
       expect(initializer).toBeCalledTimes(0);
+    });
+
+    describe("Decorator-level provider", () => {
+      const providerFn = jest.fn(() => "hello");
+
+      function InjectWithProvider(): ParameterDecorator {
+        return Inject("with-provider", providerFn);
+      }
+
+      class B {
+        func(@InjectWithProvider() a: string) {
+          return a;
+        }
+      }
+
+      const b = new B();
+
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      test("Should use provider defined in the decorator", () => {
+        const result = invokeAndInjectParams(b, "func", {}, []);
+
+        expect(result).toEqual("hello");
+        expect(providerFn).toBeCalledTimes(1);
+      });
+
+      test("Should override provider defined in the decorator", () => {
+        const result = invokeAndInjectParams(
+          b,
+          "func",
+          {
+            "with-provider": "world",
+          },
+          []
+        );
+
+        expect(result).toEqual("world");
+        expect(providerFn).toBeCalledTimes(0);
+      });
     });
   });
 });
