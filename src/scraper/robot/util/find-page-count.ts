@@ -6,11 +6,8 @@ import { Logger } from "../../util/logger";
  * but rather requires to iterate through pages to find the last page.
  * @param fn A function which returns whether a given page has items
  */
-export async function findPageCount(fn: (page: number) => Promise<boolean>): Promise<number> {
+export async function findPageCount(fn: (page: number) => Promise<boolean>, min: number = 1, max: number = 100): Promise<number> {
   Logger.verbose(`Finding page count...`);
-
-  let min = 1; // TODO: Parametrize this
-  let max = 100; // TODO: Parametrize this
 
   let guesses = 0;
 
