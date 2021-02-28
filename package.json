@@ -6,6 +6,7 @@
   "scripts": {
     "start": "ts-node",
     "test": "jest",
+    "test:ci": "jest --ci --reporters='default'",
     "example": "ts-node src/example.ts",
     "example2": "ts-node src/example2.ts",
     "example:gry": "ts-node src/examples/example-gry.ts",
