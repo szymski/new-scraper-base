@@ -23,16 +23,9 @@ export async function findPageCount(cb: FindPageCountConfig | FindPageCountCallb
   Logger.verbose(`Finding page count...`);
 
   const config: FindPageCountConfig = {
-    min: defaultConfig.min,
-    max: defaultConfig.max,
+    ...defaultConfig,
     ...(typeof cb === "function" ? { hasItems: cb } : cb)
   };
-
-  if (typeof cb === "function") {
-    config.hasItems = cb;
-  } else {
-    Object.assign(config, cb);
-  }
 
   if (config.min === undefined || config.max === undefined) {
     throw new Error("Min or max page cannot be undefined!");
@@ -48,7 +41,7 @@ export async function findPageCount(cb: FindPageCountConfig | FindPageCountCallb
     guesses++;
     const current = Math.floor((config.min + config.max) / 2);
 
-    const hasItems = await config.hasItems!(current);
+    const hasItems = await config.hasItems(current);
 
     // Search right
     if (hasItems) {

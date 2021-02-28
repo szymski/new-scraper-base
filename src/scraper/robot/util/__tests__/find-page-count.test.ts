@@ -11,7 +11,7 @@ describe("Find page count tests", () => {
   it("Should find page number given only callback", async () => {
     const callback = findPageCountCallbackCreator(27);
     const result = await findPageCount(callback);
-    expect(result).toBe(27);
+    expect(result).toEqual(27);
   });
 
   it("Should find page number given configuration with only max param", async () => {
@@ -20,7 +20,7 @@ describe("Find page count tests", () => {
       hasItems: callback,
       max: 1000
     });
-    expect(result).toBe(270);
+    expect(result).toEqual(270);
   });
 
   it("Should find page number given configuration with only min param", async () => {
@@ -29,7 +29,7 @@ describe("Find page count tests", () => {
       hasItems: callback,
       min: 50
     });
-    expect(result).toBe(72);
+    expect(result).toEqual(72);
   });
 
   it("Should find page number given configuration object", async () => {
@@ -39,7 +39,7 @@ describe("Find page count tests", () => {
       min: 1,
       max: 1000
     });
-    expect(result).toBe(350);
+    expect(result).toEqual(350);
   });
 
   it("Given invalid min/max should throw error", async () => {
