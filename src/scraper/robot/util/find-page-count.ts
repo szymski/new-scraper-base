@@ -1,12 +1,17 @@
 import { Logger } from "../../util/logger";
 
 export interface FindPageCountConfig {
-  hasItems: (page: number) => Promise<boolean>;
+  hasItems: FindPageCountCallback;
   min?: number;
   max?: number;
 }
 
 export type FindPageCountCallback = (page: number) => Promise<boolean>;
+
+const defaultConfig: Partial<FindPageCountConfig> = {
+  max: 100,
+  min: 1
+};
 
 /**
  * Finds page count using binary search.
@@ -17,33 +22,33 @@ export type FindPageCountCallback = (page: number) => Promise<boolean>;
 export async function findPageCount(cb: FindPageCountConfig | FindPageCountCallback): Promise<number> {
   Logger.verbose(`Finding page count...`);
 
-  const defaultMax = 100;
-  const defaultMin = 1;
+  const config: FindPageCountConfig = {
+    min: defaultConfig.min,
+    max: defaultConfig.max,
+    ...(typeof cb === "function" ? { hasItems: cb } : cb)
+  };
+
+  if (typeof cb === "function") {
+    config.hasItems = cb;
+  } else {
+    Object.assign(config, cb);
+  }
+
+  if (config.min === undefined || config.max === undefined) {
+    throw new Error("Min or max page cannot be undefined!");
+  }
+
+  if (config.min > config.max) {
+    throw new Error("Min page cannot be bigger than max page!");
+  }
+
   let guesses = 0;
-
-  // insert default values
-  let config: FindPageCountConfig = (typeof cb !== 'function') ?
-    {
-      hasItems: cb.hasItems,
-      max: cb.max || defaultMax,
-      min: cb.min || defaultMin
-    } : {
-      hasItems: cb as FindPageCountCallback,
-      max: defaultMax,
-      min: defaultMin
-    }
-
-  if (config.min === undefined || config.max === undefined)
-    return Promise.reject("Min or max page cannot be undefined!");
-
-  if (config.min > config.max)
-    return Promise.reject("Min page cannot be bigger than max page!");
 
   while (true) {
     guesses++;
     const current = Math.floor((config.min + config.max) / 2);
 
-    const hasItems = await config.hasItems(current);
+    const hasItems = await config.hasItems!(current);
 
     // Search right
     if (hasItems) {
