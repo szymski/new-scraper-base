@@ -1,5 +1,8 @@
+// TODO: Clean this up
+
 import { AbortSignal } from "abort-controller";
 import Cheerio from "cheerio";
+import iconv from "iconv-lite";
 import { AbortedException } from "../exceptions";
 import { getCurrentScopeNoFail } from "../robot/scope";
 import {
@@ -129,7 +132,17 @@ export class HttpRequestBuilder {
 
   readonly withHeaders = {
     text: (): Promise<HttpResponse<string>> => {
-      return this.runRetryingRequest("text", (res) => res.data);
+      // If custom encoding isn't set, we perform a text request and return the text
+      if (!this.#config.encoding) {
+        return this.runRetryingRequest("text", (res) => res.data);
+      }
+      // If encoding is set, we get a raw buffer and then convert it to text using given encoding
+      else {
+        return this.runRetryingRequest("buffer", (res) => {
+          const buffer: Buffer = res.data;
+          return iconv.decode(buffer, this.#config.encoding!);
+        });
+      }
     },
     json: <T = any>(): Promise<HttpResponse<T>> => {
       this.add.header("Accept", "application/json; utf-8");
@@ -259,6 +272,10 @@ export class HttpRequestBuilder {
     },
     interceptor: (interceptor: InterceptorLike) => {
       this.#config.add.interceptor(interceptor);
+      return this;
+    },
+    encoding: (encoding: string) => {
+      this.#config.encoding = encoding;
       return this;
     },
   };

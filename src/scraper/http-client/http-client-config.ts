@@ -10,7 +10,7 @@ import {
   ResponseInterceptorFunction,
   ResponseInterceptorLike,
 } from "./interceptors/interfaces";
-import { HttpHeaderAdd } from "./interfaces";
+import { Encoding, HttpHeaderAdd } from "./interfaces";
 
 // TODO: Encoding
 export interface HttpClientConfig {
@@ -30,6 +30,7 @@ interface HttpClientConfigInterceptors {
 
 export class HttpClientConfig {
   baseUrl!: string;
+  encoding?: Encoding;
   headers: Record<string, string> = {};
   cookies: CookieJar = new CookieJar();
   urlParams = new URLSearchParams();
@@ -91,6 +92,10 @@ export class HttpClientConfig {
       }
       return this;
     },
+    encoding: (encoding: string) => {
+      this.encoding = encoding;
+      return this;
+    },
   };
 
   clone(): HttpClientConfig {
@@ -103,6 +108,7 @@ export class HttpClientConfig {
 
     for (const config of configs) {
       result.baseUrl = config.baseUrl ?? result.baseUrl;
+      result.encoding = config.encoding ?? result.encoding;
       result.headers = { ...result.headers, ...config.headers };
       // TODO: Concat cookies
       config.urlParams.forEach((value, key) =>
