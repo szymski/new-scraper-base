@@ -526,84 +526,146 @@ describe("HttpRequestBuilder", () => {
   });
 
   describe("Encoding", () => {
-    test("Should use text response if no custom encoding set", async () => {
-      const performer: HttpRequestPerformer = {
-        async perform(input): Promise<HttpRequestPerformOutput> {
-          return {
-            success: true,
-            data: "",
-            headers: {},
-            statusCode: 200,
-          };
-        },
-      };
-
-      const spy = jest.spyOn(performer, "perform");
-
-      const client = new HttpClient(performer);
-      client.config.encoding = undefined;
-
-      await client.get("").text();
-
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          responseType: "text",
-        })
-      );
-    });
-
-    test("Should use buffer response if custom encoding set", async () => {
-      const performer: HttpRequestPerformer = {
-        async perform(input): Promise<HttpRequestPerformOutput> {
-          return {
-            success: true,
-            data: "",
-            headers: {},
-            statusCode: 200,
-          };
-        },
-      };
-
-      const spy = jest.spyOn(performer, "perform");
-
-      const client = new HttpClient(performer);
-      client.config.encoding = "latin1";
-
-      await client.get("").text();
-
-      expect(spy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          responseType: "buffer",
-        })
-      );
-    });
-
-    test.each([
-      ["ascii", "standard ascii text"],
-      ["latin1", "tu es bourré"],
-      ["utf8", "zażółć gęślą jaźń"],
-      ["windows-1252", "É¾Òxæa"],
-    ])(
-      "Should decode response with %s encoding",
-      async (encoding, inputText) => {
+    describe("Response", () => {
+      test("Should use text response if no custom encoding set", async () => {
         const performer: HttpRequestPerformer = {
           async perform(input): Promise<HttpRequestPerformOutput> {
             return {
               success: true,
-              data: iconv.encode(inputText, encoding),
+              data: "",
               headers: {},
               statusCode: 200,
             };
           },
         };
 
+        const spy = jest.spyOn(performer, "perform");
+
         const client = new HttpClient(performer);
-        client.config.encoding = encoding;
+        client.config.responseEncoding = undefined;
 
-        const text = await client.get("").text();
+        await client.get("").text();
 
-        expect(text).toEqual(inputText);
-      }
-    );
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            responseType: "text",
+          })
+        );
+      });
+
+      test("Should use buffer response if custom encoding set", async () => {
+        const performer: HttpRequestPerformer = {
+          async perform(input): Promise<HttpRequestPerformOutput> {
+            return {
+              success: true,
+              data: "",
+              headers: {},
+              statusCode: 200,
+            };
+          },
+        };
+
+        const spy = jest.spyOn(performer, "perform");
+
+        const client = new HttpClient(performer);
+        client.config.responseEncoding = "latin1";
+
+        await client.get("").text();
+
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            responseType: "buffer",
+          })
+        );
+      });
+
+      test.each([
+        ["ascii", "standard ascii text"],
+        ["latin1", "tu es bourré"],
+        ["utf8", "zażółć gęślą jaźń"],
+        ["windows-1252", "É¾Òxæa"],
+      ])(
+        "Should decode response with %s encoding",
+        async (encoding, inputText) => {
+          const performer: HttpRequestPerformer = {
+            async perform(input): Promise<HttpRequestPerformOutput> {
+              return {
+                success: true,
+                data: iconv.encode(inputText, encoding),
+                headers: {},
+                statusCode: 200,
+              };
+            },
+          };
+
+          const client = new HttpClient(performer);
+          client.config.responseEncoding = encoding;
+
+          const text = await client.get("").text();
+
+          expect(text).toEqual(inputText);
+        }
+      );
+    });
+
+    describe("Request", () => {
+      test("Should send standard text if no encoding", async () => {
+        const text = "Some example zażółć";
+
+        const performer: HttpRequestPerformer = {
+          async perform(input): Promise<HttpRequestPerformOutput> {
+            return {
+              success: true,
+              data: "",
+              headers: {},
+              statusCode: 200,
+            };
+          },
+        };
+
+        const spy = jest.spyOn(performer, "perform");
+
+        const client = new HttpClient(performer);
+        client.config.requestEncoding = undefined;
+
+        await client.post("").add.body(text).void();
+
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            bodyType: "text",
+            body: text,
+          })
+        );
+      });
+
+      test("Should send ecoded text if encoding set", async () => {
+        const text = "Some example zażółć";
+
+        const performer: HttpRequestPerformer = {
+          async perform(input): Promise<HttpRequestPerformOutput> {
+            return {
+              success: true,
+              data: "",
+              headers: {},
+              statusCode: 200,
+            };
+          },
+        };
+
+        const spy = jest.spyOn(performer, "perform");
+
+        const client = new HttpClient(performer);
+        client.config.requestEncoding = "latin1";
+
+        await client.post("").add.body(text).void();
+
+        expect(spy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            bodyType: "buffer",
+            body: iconv.encode(text, "latin1"),
+          })
+        );
+      });
+    });
   });
 });

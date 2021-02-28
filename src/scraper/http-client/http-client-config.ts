@@ -30,7 +30,8 @@ interface HttpClientConfigInterceptors {
 
 export class HttpClientConfig {
   baseUrl!: string;
-  encoding?: Encoding;
+  responseEncoding?: Encoding;
+  requestEncoding?: Encoding;
   headers: Record<string, string> = {};
   cookies: CookieJar = new CookieJar();
   urlParams = new URLSearchParams();
@@ -92,8 +93,12 @@ export class HttpClientConfig {
       }
       return this;
     },
-    encoding: (encoding: string) => {
-      this.encoding = encoding;
+    responseEncoding: (encoding: string) => {
+      this.responseEncoding = encoding;
+      return this;
+    },
+    requestEncoding: (encoding: string) => {
+      this.requestEncoding = encoding;
       return this;
     },
   };
@@ -108,7 +113,8 @@ export class HttpClientConfig {
 
     for (const config of configs) {
       result.baseUrl = config.baseUrl ?? result.baseUrl;
-      result.encoding = config.encoding ?? result.encoding;
+      result.responseEncoding = config.responseEncoding ?? result.responseEncoding;
+      result.requestEncoding = config.requestEncoding ?? result.requestEncoding;
       result.headers = { ...result.headers, ...config.headers };
       // TODO: Concat cookies
       config.urlParams.forEach((value, key) =>

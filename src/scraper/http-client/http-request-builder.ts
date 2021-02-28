@@ -133,14 +133,14 @@ export class HttpRequestBuilder {
   readonly withHeaders = {
     text: (): Promise<HttpResponse<string>> => {
       // If custom encoding isn't set, we perform a text request and return the text
-      if (!this.#config.encoding) {
+      if (!this.#config.responseEncoding) {
         return this.runRetryingRequest("text", (res) => res.data);
       }
       // If encoding is set, we get a raw buffer and then convert it to text using given encoding
       else {
         return this.runRetryingRequest("buffer", (res) => {
           const buffer: Buffer = res.data;
-          return iconv.decode(buffer, this.#config.encoding!);
+          return iconv.decode(buffer, this.#config.responseEncoding!);
         });
       }
     },
@@ -274,8 +274,12 @@ export class HttpRequestBuilder {
       this.#config.add.interceptor(interceptor);
       return this;
     },
-    encoding: (encoding: string) => {
-      this.#config.encoding = encoding;
+    responseEncoding: (encoding: string) => {
+      this.#config.responseEncoding = encoding;
+      return this;
+    },
+    requestEncoding: (encoding: string) => {
+      this.#config.requestEncoding = encoding;
       return this;
     },
   };
@@ -290,11 +294,18 @@ export class HttpRequestBuilder {
       urlParamsString
     );
 
+    let body = this.#body;
+
+    if(this.#body.type === "text" && this.#config.requestEncoding) {
+      body.type = "buffer";
+      body.value = iconv.encode(this.#body.value, this.#config.requestEncoding)
+    }
+
     let input: HttpRequestPerformInput = {
       method: this.method,
       url: joinedUrl,
-      bodyType: this.#body.type,
-      body: this.#body.value,
+      bodyType: body.type,
+      body: body.value,
       headers: this.#config.headers,
       cookies: this.#config.cookies,
       responseType: responseType,

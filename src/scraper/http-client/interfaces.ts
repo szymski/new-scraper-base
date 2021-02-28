@@ -28,7 +28,9 @@ export interface HttpHeaderAdd<TReturn> {
 
   interceptor(interceptor: InterceptorLike): TReturn;
 
-  encoding(encoding: Encoding): TReturn;
+  responseEncoding(encoding: Encoding): TReturn;
+
+  requestEncoding(encoding: Encoding): TReturn;
 }
 
 export interface HttpBodyAdd<TReturn> {
