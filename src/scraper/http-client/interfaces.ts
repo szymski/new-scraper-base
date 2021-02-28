@@ -1,3 +1,4 @@
+import FormData from "form-data";
 import { Cookie, CookieJar } from "tough-cookie";
 import {
   InterceptorLike,
@@ -5,7 +6,13 @@ import {
   ResponseInterceptorLike,
 } from "./interceptors/interfaces";
 
-type NodeEncodings = "ascii" | "utf-8" | "utf8" | "latin1" | "utf-16le" | "utf16le";
+type NodeEncodings =
+  | "ascii"
+  | "utf-8"
+  | "utf8"
+  | "latin1"
+  | "utf-16le"
+  | "utf16le";
 
 export type Encoding = NodeEncodings | string;
 
@@ -37,6 +44,10 @@ export interface HttpBodyAdd<TReturn> {
   body(body: string): TReturn;
 
   jsonBody(body: any): TReturn;
+
+  formData(form: FormData): TReturn;
+
+  urlEncodedBody(form: URLSearchParams): TReturn;
 }
 
 export type HttpRequestAdd<TReturn> = HttpHeaderAdd<TReturn> &

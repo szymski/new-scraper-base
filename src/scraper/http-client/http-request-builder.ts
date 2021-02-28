@@ -2,6 +2,7 @@
 
 import { AbortSignal } from "abort-controller";
 import Cheerio from "cheerio";
+import FormData from "form-data";
 import iconv from "iconv-lite";
 import { AbortedException } from "../exceptions";
 import { getCurrentScopeNoFail } from "../robot/scope";
@@ -36,6 +37,7 @@ import {
 import { HttpRequestAdd } from "./interfaces";
 import CheerioAPI = cheerio.CheerioAPI;
 import Root = cheerio.Root;
+import { Logger } from "../util/logger";
 
 export interface HttpRequestBuilder {
   appendConfig(config: HttpClientConfig): this;
@@ -261,6 +263,29 @@ export class HttpRequestBuilder {
         value: JSON.stringify(body),
         type: "text",
       };
+      return this;
+    },
+    formData: (form: FormData) => {
+      // TODO: Write tests and check if it works
+
+      if (this.#config.requestEncoding) {
+        // TODO: Disallow unsupported encodings
+        form.setEncoding(this.#config.requestEncoding as BufferEncoding);
+      }
+
+      this.add.headers(form.getHeaders());
+
+      this.#body.type = "buffer";
+      this.#body.value = form.getBuffer();
+
+      return this;
+    },
+    urlEncodedBody: (form: URLSearchParams) => {
+      // TODO: Url encoded body tests
+      this.add.header("Content-Type", "application/x-www-form-urlencoded");
+      this.#body.type = "text";
+      this.#body.value = form.toString();
+      Logger.warn(form.toString())
       return this;
     },
     requestInterceptor: (interceptor: RequestInterceptorLike) => {
