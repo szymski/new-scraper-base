@@ -602,8 +602,12 @@ describe("HttpRequestBuilder", () => {
           client.config.responseEncoding = encoding;
 
           const text = await client.get("").text();
+          const $ = await client.get("").cheerio();
 
           expect(text).toEqual(inputText);
+          expect($.html()).toEqual(
+            `<html><head></head><body>${inputText}</body></html>`
+          );
         }
       );
     });
@@ -638,7 +642,7 @@ describe("HttpRequestBuilder", () => {
         );
       });
 
-      test("Should send ecoded text if encoding set", async () => {
+      test("Should send encoded text if encoding set", async () => {
         const text = "Some example zażółć";
 
         const performer: HttpRequestPerformer = {

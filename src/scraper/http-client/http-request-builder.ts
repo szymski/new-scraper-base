@@ -132,17 +132,7 @@ export class HttpRequestBuilder {
 
   readonly withHeaders = {
     text: (): Promise<HttpResponse<string>> => {
-      // If custom encoding isn't set, we perform a text request and return the text
-      if (!this.#config.responseEncoding) {
-        return this.runRetryingRequest("text", (res) => res.data);
-      }
-      // If encoding is set, we get a raw buffer and then convert it to text using given encoding
-      else {
-        return this.runRetryingRequest("buffer", (res) => {
-          const buffer: Buffer = res.data;
-          return iconv.decode(buffer, this.#config.responseEncoding!);
-        });
-      }
+      return this.runRetryingRequest("text", (res) => res.data);
     },
     json: <T = any>(): Promise<HttpResponse<T>> => {
       this.add.header("Accept", "application/json; utf-8");
@@ -166,6 +156,17 @@ export class HttpRequestBuilder {
     responseType: HttpRequestPerformerResponseType,
     getDataCallback: (res: HttpRequestPerformOutputSuccess) => any
   ): Promise<HttpResponse<T>> {
+    // If we want to get text response and custom encoding is enabled, fetch buffer and decode it instead
+    if (responseType === "text" && this.#config.responseEncoding) {
+      const originalCallback = getDataCallback;
+      responseType = "buffer";
+      getDataCallback = (res) => {
+        const buffer: Buffer = res.data;
+        res.data = iconv.decode(buffer, this.#config.responseEncoding!);
+        return originalCallback(res);
+      };
+    }
+
     if (this.#used) {
       throw new HttpBuilderAlreadyUsed();
     }
@@ -296,9 +297,9 @@ export class HttpRequestBuilder {
 
     let body = this.#body;
 
-    if(this.#body.type === "text" && this.#config.requestEncoding) {
+    if (this.#body.type === "text" && this.#config.requestEncoding) {
       body.type = "buffer";
-      body.value = iconv.encode(this.#body.value, this.#config.requestEncoding)
+      body.value = iconv.encode(this.#body.value, this.#config.requestEncoding);
     }
 
     let input: HttpRequestPerformInput = {
