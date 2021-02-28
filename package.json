@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node",
     "test": "jest",
-    "test:ci": "jest --ci --reporters='default'",
+    "test:ci": "jest --ci --reporters='default' --reporters='jest-github-actions-reporter'",
     "example": "ts-node src/example.ts",
     "example2": "ts-node src/example2.ts",
     "example:gry": "ts-node src/examples/example-gry.ts",
@@ -39,6 +39,7 @@
     "@types/node-fetch": "^2.5.8",
     "@types/progress": "^2.0.3",
     "@types/tough-cookie": "^4.0.0",
+    "jest-github-actions-reporter": "^1.0.3",
     "prettier": "2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
     "ts-jest": "^26.5.0",

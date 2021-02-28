@@ -417,3 +417,7 @@ describe("Robot run tests", () => {
     });
   });
 });
+
+test("Test GitHub Actions reporter", () => {
+  expect(2 + 3).toEqual(4);
+});
