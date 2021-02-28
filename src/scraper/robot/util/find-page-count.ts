@@ -19,12 +19,21 @@ const defaultConfig: Partial<FindPageCountConfig> = {
  * but rather requires to iterate through pages to find the last page.
  * @param fn A function which returns whether a given page has items
  */
-export async function findPageCount(cb: FindPageCountConfig | FindPageCountCallback): Promise<number> {
+export function findPageCount(config: FindPageCountConfig): Promise<number>;
+/**
+ * Finds page count using binary search.
+ * Useful when a website doesn't display total page/item count,
+ * but rather requires to iterate through pages to find the last page.
+ * @param fn A function which returns whether a given page has items
+ */
+export function findPageCount(callback: FindPageCountCallback): Promise<number>;
+
+export async function findPageCount(callbackOrConfig: FindPageCountConfig | FindPageCountCallback): Promise<number> {
   Logger.verbose(`Finding page count...`);
 
   const config: FindPageCountConfig = {
     ...defaultConfig,
-    ...(typeof cb === "function" ? { hasItems: cb } : cb)
+    ...(typeof callbackOrConfig === "function" ? { hasItems: callbackOrConfig } : callbackOrConfig)
   };
 
   if (config.min === undefined || config.max === undefined) {
