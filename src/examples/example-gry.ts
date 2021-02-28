@@ -27,6 +27,7 @@ class TestRobot extends Robot {
   constructor() {
     super();
     this.client.config.baseUrl = "https://stare.e-gry.net/";
+    this.client.config.responseEncoding = "iso-8859-2";
   }
 
   @Entrypoint()
