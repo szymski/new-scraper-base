@@ -1,5 +1,8 @@
+// TODO: Clean this up
+
 import { AbortSignal } from "abort-controller";
 import Cheerio from "cheerio";
+import iconv from "iconv-lite";
 import { AbortedException } from "../exceptions";
 import { getCurrentScopeNoFail } from "../robot/scope";
 import {
@@ -153,6 +156,17 @@ export class HttpRequestBuilder {
     responseType: HttpRequestPerformerResponseType,
     getDataCallback: (res: HttpRequestPerformOutputSuccess) => any
   ): Promise<HttpResponse<T>> {
+    // If we want to get text response and custom encoding is enabled, fetch buffer and decode it instead
+    if (responseType === "text" && this.#config.responseEncoding) {
+      const originalCallback = getDataCallback;
+      responseType = "buffer";
+      getDataCallback = (res) => {
+        const buffer: Buffer = res.data;
+        res.data = iconv.decode(buffer, this.#config.responseEncoding!);
+        return originalCallback(res);
+      };
+    }
+
     if (this.#used) {
       throw new HttpBuilderAlreadyUsed();
     }
@@ -261,6 +275,14 @@ export class HttpRequestBuilder {
       this.#config.add.interceptor(interceptor);
       return this;
     },
+    responseEncoding: (encoding: string) => {
+      this.#config.responseEncoding = encoding;
+      return this;
+    },
+    requestEncoding: (encoding: string) => {
+      this.#config.requestEncoding = encoding;
+      return this;
+    },
   };
 
   private async getPerformInput(
@@ -273,11 +295,18 @@ export class HttpRequestBuilder {
       urlParamsString
     );
 
+    let body = this.#body;
+
+    if (this.#body.type === "text" && this.#config.requestEncoding) {
+      body.type = "buffer";
+      body.value = iconv.encode(this.#body.value, this.#config.requestEncoding);
+    }
+
     let input: HttpRequestPerformInput = {
       method: this.method,
       url: joinedUrl,
-      bodyType: this.#body.type,
-      body: this.#body.value,
+      bodyType: body.type,
+      body: body.value,
       headers: this.#config.headers,
       cookies: this.#config.cookies,
       responseType: responseType,

@@ -7,7 +7,7 @@ import {
 } from "./http-request-performer";
 
 export type HttpMethod = "get" | "post" | "head" | "patch" | "delete" | "put";
-export type HttpRequestBodyType = "null" | "text";
+export type HttpRequestBodyType = "null" | "text" | "buffer";
 export type HttpRequestPerformerResponseType = "text" | "buffer" | "void";
 
 export interface HttpClient {

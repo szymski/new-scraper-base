@@ -5,6 +5,10 @@ import {
   ResponseInterceptorLike,
 } from "./interceptors/interfaces";
 
+type NodeEncodings = "ascii" | "utf-8" | "utf8" | "latin1" | "utf-16le" | "utf16le";
+
+export type Encoding = NodeEncodings | string;
+
 export interface HttpHeaderAdd<TReturn> {
   header(key: string, value: string): TReturn;
 
@@ -23,6 +27,10 @@ export interface HttpHeaderAdd<TReturn> {
   responseInterceptor(interceptor: ResponseInterceptorLike): TReturn;
 
   interceptor(interceptor: InterceptorLike): TReturn;
+
+  responseEncoding(encoding: Encoding): TReturn;
+
+  requestEncoding(encoding: Encoding): TReturn;
 }
 
 export interface HttpBodyAdd<TReturn> {

@@ -50,6 +50,8 @@ describe("HttpClientConfig", () => {
   test("Should clone", () => {
     const config: HttpClientConfig = new HttpClientConfig();
     config.baseUrl = "base";
+    config.add.responseEncoding("utf-8");
+    config.add.requestEncoding("latin1");
     config.add.header("h1", "test");
     config.add.header("h2", "test2");
     config.add.urlParam("p1", "param1");
@@ -82,6 +84,9 @@ describe("HttpClientConfig", () => {
 
     expect(clone.interceptors.request).toEqual([requestInterceptor]);
     expect(clone.interceptors.response).toEqual([responseInterceptor]);
+
+    expect(clone.responseEncoding).toEqual("utf-8");
+    expect(clone.requestEncoding).toEqual("latin1");
   });
 
   test("Should concatenate 2 configs", () => {
@@ -100,6 +105,8 @@ describe("HttpClientConfig", () => {
 
     const config1: HttpClientConfig = new HttpClientConfig();
     config1.baseUrl = "base";
+    config1.responseEncoding = "utf8";
+    config1.requestEncoding = "latin1";
     config1.add.header("h1", "test");
     config1.add.header("h2", "test2");
     config1.add.urlParam("p1", "param1");
@@ -108,6 +115,8 @@ describe("HttpClientConfig", () => {
 
     const config2: HttpClientConfig = new HttpClientConfig();
     config2.baseUrl = "overwritten";
+    config2.responseEncoding = "latin1";
+    config2.requestEncoding = "test";
     config2.add.header("h2", "overwritten");
     config2.add.urlParam("p1", "overwritten");
     config2.add.requestInterceptor(requestInterceptor2);
@@ -117,6 +126,8 @@ describe("HttpClientConfig", () => {
     const concatenated = HttpClientConfig.concat(config1, config2);
 
     expect(concatenated.baseUrl).toEqual("overwritten");
+    expect(concatenated.responseEncoding).toEqual("latin1");
+    expect(concatenated.requestEncoding).toEqual("test");
 
     expect(concatenated.headers).toEqual({
       h1: "test",
