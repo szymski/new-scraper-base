@@ -6,7 +6,6 @@ import FormData from "form-data";
 import iconv from "iconv-lite";
 import { AbortedException } from "../exceptions";
 import { getCurrentScopeNoFail } from "../robot/scope";
-import { Logger } from "../util/logger";
 import {
   HttpAddressNotFoundException,
   HttpBuilderAlreadyUsed,
@@ -199,18 +198,6 @@ export class HttpRequestBuilder {
         data: await getDataCallback(output),
       };
 
-      // TODO: Move this to interceptor?
-      // TODO: There can be multiple Set-Cookie headers
-      const setCookieHeader = Object.entries(response.headers).find(
-        (x) => x[0].toLowerCase() === "set-cookie"
-      );
-      if (setCookieHeader) {
-        await this.#config.cookies.setCookie(
-          setCookieHeader[1],
-          this.joinUrl(this.#config.baseUrl, this.url, "")
-        );
-      }
-
       if (output.statusCode === 404) {
         throw new HttpNotFoundException(response);
       } else if (output.statusCode === 403) {
@@ -297,7 +284,6 @@ export class HttpRequestBuilder {
       this.add.header("Content-Type", "application/x-www-form-urlencoded");
       this.#body.type = "text";
       this.#body.value = form.toString();
-      Logger.warn(form.toString());
       return this;
     },
     requestInterceptor: (interceptor: RequestInterceptorLike) => {
@@ -341,7 +327,6 @@ export class HttpRequestBuilder {
 
     const headers = {
       ...this.#config.headers,
-      Cookie: await this.#config.cookies.getCookieString(joinedUrl),
     };
 
     let input: HttpRequestPerformInput = {
@@ -355,10 +340,12 @@ export class HttpRequestBuilder {
       abortSignal: this.#abortSignal,
     };
 
-  for (const interceptor of this.#config.interceptors.request) {
+    for (const interceptor of this.#config.interceptors.request) {
       input =
         <any>await interceptor(input, this.#config, this.#context) ?? input;
     }
+
+    headers.Cookie = await input.cookies.getCookieString(joinedUrl);
 
     return input;
   }

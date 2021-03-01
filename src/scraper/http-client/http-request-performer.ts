@@ -38,6 +38,7 @@ export interface HttpRequestPerformOutputFail {
 }
 
 export interface HttpRequestPerformOutputSuccess {
+  url: string;
   success: true;
   statusCode: number;
   headers: Record<string, string>;

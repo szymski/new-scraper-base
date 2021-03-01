@@ -24,6 +24,7 @@ describe("HttpRequestBuilder", () => {
         input: HttpRequestPerformInput
       ): Promise<HttpRequestPerformOutput> {
         return {
+          url: "",
           success: true,
           data,
           headers: {},
@@ -332,6 +333,7 @@ describe("HttpRequestBuilder", () => {
         .get("some_url")
         .add.responseInterceptor(async (output, config, context) => {
           return {
+            url: "",
             success: true,
             statusCode: 200,
             headers: {},
@@ -408,6 +410,7 @@ describe("HttpRequestBuilder", () => {
           input: HttpRequestPerformInput
         ): Promise<HttpRequestPerformOutput> {
           return {
+            url: "",
             success: true,
             statusCode: 404,
             headers: {},
@@ -429,6 +432,7 @@ describe("HttpRequestBuilder", () => {
           input: HttpRequestPerformInput
         ): Promise<HttpRequestPerformOutput> {
           return {
+            url: "",
             success: true,
             statusCode: 403,
             headers: {},
@@ -450,6 +454,7 @@ describe("HttpRequestBuilder", () => {
           input: HttpRequestPerformInput
         ): Promise<HttpRequestPerformOutput> {
           return {
+            url: "",
             success: true,
             statusCode: 401,
             headers: {},
@@ -500,6 +505,7 @@ describe("HttpRequestBuilder", () => {
                 errorCode: HttpRequestError.Other,
               }
             : {
+                url: "",
                 success: true,
                 statusCode: 200,
                 headers: {},
@@ -531,6 +537,7 @@ describe("HttpRequestBuilder", () => {
         const performer: HttpRequestPerformer = {
           async perform(input): Promise<HttpRequestPerformOutput> {
             return {
+              url: "",
               success: true,
               data: "",
               headers: {},
@@ -557,6 +564,7 @@ describe("HttpRequestBuilder", () => {
         const performer: HttpRequestPerformer = {
           async perform(input): Promise<HttpRequestPerformOutput> {
             return {
+              url: "",
               success: true,
               data: "",
               headers: {},
@@ -590,6 +598,7 @@ describe("HttpRequestBuilder", () => {
           const performer: HttpRequestPerformer = {
             async perform(input): Promise<HttpRequestPerformOutput> {
               return {
+                url: "",
                 success: true,
                 data: iconv.encode(inputText, encoding),
                 headers: {},
@@ -619,6 +628,7 @@ describe("HttpRequestBuilder", () => {
         const performer: HttpRequestPerformer = {
           async perform(input): Promise<HttpRequestPerformOutput> {
             return {
+              url: "",
               success: true,
               data: "",
               headers: {},
@@ -648,6 +658,7 @@ describe("HttpRequestBuilder", () => {
         const performer: HttpRequestPerformer = {
           async perform(input): Promise<HttpRequestPerformOutput> {
             return {
+              url: "",
               success: true,
               data: "",
               headers: {},

@@ -11,6 +11,7 @@ import {
   ResponseInterceptorLike,
 } from "./interceptors/interfaces";
 import { Encoding, HttpHeaderAdd } from "./interfaces";
+import { forEach } from "async";
 
 // TODO: Encoding
 export interface HttpClientConfig {
@@ -111,12 +112,17 @@ export class HttpClientConfig {
     const result = new HttpClientConfig();
     result.urlParams = new URLSearchParams();
 
+    const serializedCookies = new CookieJar().serializeSync();
+
     for (const config of configs) {
       result.baseUrl = config.baseUrl ?? result.baseUrl;
-      result.responseEncoding = config.responseEncoding ?? result.responseEncoding;
+      result.responseEncoding =
+        config.responseEncoding ?? result.responseEncoding;
       result.requestEncoding = config.requestEncoding ?? result.requestEncoding;
       result.headers = { ...result.headers, ...config.headers };
-      // TODO: Concat cookies
+      for(const cookie of config.cookies.serializeSync().cookies) {
+        serializedCookies.cookies.push(cookie);
+      }
       config.urlParams.forEach((value, key) =>
         result.urlParams.set(key, value)
       );
@@ -129,6 +135,9 @@ export class HttpClientConfig {
         ...config.interceptors.response,
       ];
     }
+
+    result.cookies = CookieJar.deserializeSync(serializedCookies);
+
     return result;
   }
 }
