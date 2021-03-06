@@ -37,7 +37,6 @@ import {
 import { HttpRequestAdd } from "./interfaces";
 import CheerioAPI = cheerio.CheerioAPI;
 import Root = cheerio.Root;
-import { Logger } from "../util/logger";
 
 export interface HttpRequestBuilder {
   appendConfig(config: HttpClientConfig): this;
@@ -285,7 +284,6 @@ export class HttpRequestBuilder {
       this.add.header("Content-Type", "application/x-www-form-urlencoded");
       this.#body.type = "text";
       this.#body.value = form.toString();
-      Logger.warn(form.toString())
       return this;
     },
     requestInterceptor: (interceptor: RequestInterceptorLike) => {
@@ -327,12 +325,16 @@ export class HttpRequestBuilder {
       body.value = iconv.encode(this.#body.value, this.#config.requestEncoding);
     }
 
+    const headers = {
+      ...this.#config.headers,
+    };
+
     let input: HttpRequestPerformInput = {
       method: this.method,
       url: joinedUrl,
       bodyType: body.type,
       body: body.value,
-      headers: this.#config.headers,
+      headers: headers,
       cookies: this.#config.cookies,
       responseType: responseType,
       abortSignal: this.#abortSignal,
@@ -341,6 +343,13 @@ export class HttpRequestBuilder {
     for (const interceptor of this.#config.interceptors.request) {
       input =
         <any>await interceptor(input, this.#config, this.#context) ?? input;
+    }
+
+    if (input.cookies) {
+      const cookieStr = await input.cookies.getCookieString(joinedUrl);
+      if (cookieStr) {
+        headers.Cookie = cookieStr;
+      }
     }
 
     return input;

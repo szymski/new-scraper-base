@@ -12,11 +12,11 @@ import {
 } from "./interceptors/interfaces";
 import { Encoding, HttpHeaderAdd } from "./interfaces";
 
-// TODO: Encoding
+// TODO: Get rid of this interface?
 export interface HttpClientConfig {
   baseUrl: string;
   headers: Record<string, string>;
-  cookies: CookieJar;
+  cookies: CookieJar | undefined;
   readonly interceptors: HttpClientConfigInterceptors;
   readonly add: HttpHeaderAdd<HttpClientConfig>;
 
@@ -33,7 +33,7 @@ export class HttpClientConfig {
   responseEncoding?: Encoding;
   requestEncoding?: Encoding;
   headers: Record<string, string> = {};
-  cookies: CookieJar = new CookieJar();
+  cookies: CookieJar | undefined = undefined;
   urlParams = new URLSearchParams();
   readonly interceptors: HttpClientConfigInterceptors = {
     request: [],
@@ -50,8 +50,10 @@ export class HttpClientConfig {
       return this;
     },
     cookie: (cookie: Cookie, url: string) => {
-      // TODO: This should be awaited
-      this.cookies.setCookie(cookie, url);
+      if (!this.cookies) {
+        this.cookies = new CookieJar();
+      }
+      this.cookies.setCookieSync(cookie, url);
       return this;
     },
     cookies: (cookies: CookieJar) => {
@@ -111,12 +113,23 @@ export class HttpClientConfig {
     const result = new HttpClientConfig();
     result.urlParams = new URLSearchParams();
 
+    // We won't merge empty/undefined cookie jars for performance, hence the undefined
+    let serializedCookies: CookieJar.Serialized | undefined;
+
     for (const config of configs) {
       result.baseUrl = config.baseUrl ?? result.baseUrl;
-      result.responseEncoding = config.responseEncoding ?? result.responseEncoding;
+      result.responseEncoding =
+        config.responseEncoding ?? result.responseEncoding;
       result.requestEncoding = config.requestEncoding ?? result.requestEncoding;
       result.headers = { ...result.headers, ...config.headers };
-      // TODO: Concat cookies
+      if (config.cookies) {
+        if (!serializedCookies) {
+          serializedCookies = new CookieJar().serializeSync();
+        }
+        for (const cookie of config.cookies.serializeSync().cookies) {
+          serializedCookies.cookies.push(cookie);
+        }
+      }
       config.urlParams.forEach((value, key) =>
         result.urlParams.set(key, value)
       );
@@ -129,6 +142,11 @@ export class HttpClientConfig {
         ...config.interceptors.response,
       ];
     }
+
+    if(serializedCookies) {
+      result.cookies = CookieJar.deserializeSync(serializedCookies);
+    }
+
     return result;
   }
 }
