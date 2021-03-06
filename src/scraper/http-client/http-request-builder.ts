@@ -345,7 +345,12 @@ export class HttpRequestBuilder {
         <any>await interceptor(input, this.#config, this.#context) ?? input;
     }
 
-    headers.Cookie = await input.cookies.getCookieString(joinedUrl);
+    if (input.cookies) {
+      const cookieStr = await input.cookies.getCookieString(joinedUrl);
+      if (cookieStr) {
+        headers.Cookie = cookieStr;
+      }
+    }
 
     return input;
   }

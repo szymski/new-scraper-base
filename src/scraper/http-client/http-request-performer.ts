@@ -25,7 +25,7 @@ export interface HttpRequestPerformInput {
   bodyType: HttpRequestBodyType;
   body: any;
   headers: Record<string, string>;
-  cookies: CookieJar;
+  cookies?: CookieJar;
   responseType: HttpRequestPerformerResponseType;
   abortSignal?: AbortSignal;
 }

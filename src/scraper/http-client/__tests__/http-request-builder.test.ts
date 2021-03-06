@@ -81,7 +81,7 @@ describe("HttpRequestBuilder", () => {
         bodyType: "null",
         body: null,
         headers: {},
-        cookies: expect.anything(),
+        cookies: undefined,
         responseType: "text",
       });
     });
@@ -100,7 +100,7 @@ describe("HttpRequestBuilder", () => {
         bodyType: "text",
         body: "this is the body",
         headers: {},
-        cookies: expect.anything(),
+        cookies: undefined,
         responseType: "text",
       });
     });
@@ -121,7 +121,7 @@ describe("HttpRequestBuilder", () => {
         headers: expect.objectContaining({
           "Content-Type": "application/json; utf-8",
         }),
-        cookies: expect.anything(),
+        cookies: undefined,
         responseType: "text",
       });
     });
@@ -142,7 +142,7 @@ describe("HttpRequestBuilder", () => {
         headers: expect.objectContaining({
           Accept: "application/json; utf-8",
         }),
-        cookies: expect.anything(),
+        cookies: undefined,
         responseType: "text",
       });
     });
@@ -161,7 +161,7 @@ describe("HttpRequestBuilder", () => {
         bodyType: "null",
         body: null,
         headers: {},
-        cookies: expect.anything(),
+        cookies: undefined,
         responseType: "void",
       });
     });

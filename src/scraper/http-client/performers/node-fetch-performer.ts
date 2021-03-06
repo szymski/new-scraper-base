@@ -37,9 +37,11 @@ export class NodeFetchPerformer implements HttpRequestPerformer {
       }
 
       return {
+        url: input.url,
         success: true,
         data,
         statusCode: res.status,
+        // TODO: Headers should not be a dictionary, there can be multiple headers with same key
         headers: Object.fromEntries(res.headers.entries()),
       };
     } catch (e) {
