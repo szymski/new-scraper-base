@@ -5,7 +5,7 @@ import {
 import {
   addClassMetadata,
   addMethodMetadata,
-  ClassMetadataKeys,
+  ClassMetadataKeys, getScopeConditions,
   getScopeParams,
   MethodMetadataKeys,
   ScopeMetadata,
@@ -46,10 +46,13 @@ export function Scope(name?: string): MethodDecorator {
       );
 
     descriptor.value = <any>function (this: any, ...args: any[]) {
+      const usedConditions = getScopeConditions(target, propertyKey);
+
       return wrapWithScope(
         wrappedWithInjection(this, args),
         name ?? propertyKey.toString(),
-        methodParams
+        methodParams,
+        usedConditions
       ).apply(this, args);
     };
   };

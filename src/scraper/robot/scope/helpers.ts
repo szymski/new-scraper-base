@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { AbortedException, ScopeException } from "../../exceptions";
 import { Feature } from "../feature";
-import { ScopeParamMetadata } from "../metadata-helpers";
+import { getClassConditions, ScopeParamMetadata, UseConditionMetadata } from "../metadata-helpers";
 import { RootScopeContext } from "./root-scope-context";
 import { ScopeContext } from "./scope-context";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
@@ -19,7 +19,8 @@ export function formatScopeParams(
 export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
   callback: T,
   name: string,
-  paramsMetadata: ScopeParamMetadata[] = []
+  paramsMetadata: ScopeParamMetadata[] = [],
+  usedConditions: UseConditionMetadata[] = [],
 ) {
   return function (this: any, ...params: any[]) {
     const currentScope = getCurrentScopeNoFail();
@@ -42,6 +43,11 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       // Only call callback on non-root scopes
       if (scope.parent) {
         Feature.runCallback("onScopeEnter", scope);
+      }
+
+      // Try to get each condition to ensure they exist
+      for (const condition of usedConditions) {
+        currentScope.root.robot.getCondition(condition.name);
       }
 
       // TODO: Clean this up

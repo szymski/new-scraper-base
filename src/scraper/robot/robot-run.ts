@@ -1,6 +1,6 @@
 import { ScopeException } from "../exceptions";
 import { Logger } from "../util/logger";
-import { getEntrypointContext } from "./entrypoint";
+import { EntrypointContext, getEntrypointContext } from "./entrypoint";
 import {
   Feature,
   FeatureRunProperties,
@@ -41,15 +41,15 @@ export class RobotRun<TData, TReturn> {
 
   #featureProperties = new Map<new () => Feature, FeatureRunProperties<any>>();
 
-  #entrypointName: string;
+  #entrypoint: EntrypointContext;
 
   constructor(robot: Robot, fn: () => Promise<TReturn>) {
     this.#robot = robot;
     this.#fn = fn;
 
-    this.#entrypointName = getEntrypointContext().name;
+    this.#entrypoint = getEntrypointContext();
 
-    this.#rootScope = RootScopeContext.create(this.#entrypointName, robot);
+    this.#rootScope = RootScopeContext.create(this.#entrypoint.name, robot);
     this.#rootScope.callbacks.onDataReceived = (type, data) => {
       if (!this.#rootScope.abortController.signal.aborted) {
         this.callbacks.onDataReceived({
@@ -106,12 +106,18 @@ export class RobotRun<TData, TReturn> {
     }
 
     this.#status = "running";
-    Logger.verbose(`Running entrypoint ${this.#entrypointName}`);
+    Logger.verbose(`Running entrypoint ${this.#entrypoint.name}`);
 
     Process.registerRobotRun(this);
 
     this.#runPromise = runWithInitialScope(() => {
       Feature.runCallback("onRootScopeEnter", this.#rootScope);
+
+      // Try to get each condition to ensure they exist
+      for (const condition of this.#entrypoint.usedConditions) {
+        this.#robot.getCondition(condition.name);
+      }
+
       const result = this.#fn()
         .catch((e) => {
           this.#status = "errored";
@@ -140,7 +146,7 @@ export class RobotRun<TData, TReturn> {
     const result = await this.#runPromise;
 
     this.#status = "finished";
-    Logger.verbose(`Robot action '${this.#entrypointName}' finished`);
+    Logger.verbose(`Robot action '${this.#entrypoint.name}' finished`);
 
     this.callbacks.onFinished();
 

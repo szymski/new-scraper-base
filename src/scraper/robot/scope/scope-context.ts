@@ -1,4 +1,5 @@
 import { Feature, FeatureContext } from "../feature";
+import { ConditionMetadata } from "../metadata-helpers";
 import { RootScopeContext } from "./root-scope-context";
 
 export class ScopeContext {
@@ -88,6 +89,10 @@ export class ScopeContext {
   setLocal<T>(key: symbol | string, value: T) {
     return (this.localData[key] = value);
   }
+
+  async checkAndSatisfyConditions(meta: ConditionMetadata) {}
+
+  async checkAndSatisfyCondition(meta: ConditionMetadata) {}
 
   static inherit(parent: ScopeContext, name: string, formattedParams: string) {
     return new ScopeContext({
