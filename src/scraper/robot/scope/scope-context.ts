@@ -90,10 +90,6 @@ export class ScopeContext {
     return (this.localData[key] = value);
   }
 
-  async checkAndSatisfyConditions(meta: ConditionMetadata) {}
-
-  async checkAndSatisfyCondition(meta: ConditionMetadata) {}
-
   static inherit(parent: ScopeContext, name: string, formattedParams: string) {
     return new ScopeContext({
       root: parent.root,
