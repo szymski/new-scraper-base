@@ -17,11 +17,19 @@ export interface ConditionOptions {
   /**
    * Indicates if verification should be performed before satisfying.
    * If false, satisfy method will always be called first on each robot run.
+   * @default true
    */
   verifyFirst?: boolean;
+
+  /**
+   * Indicates if verification should be done every time a scope
+   * using this condition is called.
+   * If false, verification will be only run once per robot run.
+   * @default false
+   */
+  verifyEverytime?: boolean;
 }
 
-// TODO: Condition function could be memoized
 export function Condition(
   name: string,
   options?: ConditionOptions

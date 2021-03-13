@@ -6,7 +6,7 @@ export class ConditionFeature extends Feature {
   async verifyAndSatisfyCondition(scope: ScopeContext, name: string) {
     const condition = scope.root.robot.getCondition(name);
 
-    if (this.verifiedConditions.value!.has(name)) {
+    if (!condition.options.verifyEverytime && this.verifiedConditions.value!.has(name)) {
       return;
     }
 
@@ -32,6 +32,9 @@ export class ConditionFeature extends Feature {
       }
 
       Logger.verbose(`Condition '${name}' satisfied successfully`);
+      this.verifiedConditions.value!.add(name);
+    }
+    else {
       this.verifiedConditions.value!.add(name);
     }
   }

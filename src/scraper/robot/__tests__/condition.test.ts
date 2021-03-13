@@ -324,7 +324,7 @@ describe("Condition tests", () => {
       expect(trackFn).toHaveBeenNthCalledWith(4, "verify");
     });
 
-    test("Should only satisfy condition once", async () => {
+    test("Should only verify and satisfy condition once", async () => {
       const trackFn = jest.fn();
 
       class TestRobot2 extends Robot {
@@ -368,6 +368,46 @@ describe("Condition tests", () => {
       expect(trackFn).toHaveBeenNthCalledWith(3, "verify");
       expect(trackFn).toHaveBeenNthCalledWith(4, "scope");
       expect(trackFn).toHaveBeenNthCalledWith(5, "scope");
+    });
+
+    test("Should only verify condition once", async () => {
+      const trackFn = jest.fn();
+
+      class TestRobot2 extends Robot {
+        @Condition("condition")
+        conditionFn(): ConditionMethods {
+          return {
+            verify: async () => {
+              trackFn("verify");
+              return true;
+            },
+            satisfy: async () => {},
+          };
+        }
+
+        @Entrypoint()
+        testEntrypoint() {
+          return this.entrypoint(async () => {
+            await this.scope();
+            await this.scope();
+          });
+        }
+
+        @Scope()
+        @UseCondition("condition")
+        async scope() {
+          trackFn("scope");
+        }
+      }
+
+      const robot = new TestRobot2();
+      const run = robot.testEntrypoint();
+      await run.start();
+
+      expect(trackFn).toHaveBeenCalledTimes(3);
+      expect(trackFn).toHaveBeenNthCalledWith(1, "verify");
+      expect(trackFn).toHaveBeenNthCalledWith(2, "scope");
+      expect(trackFn).toHaveBeenNthCalledWith(3, "scope");
     });
 
     test("Should preserve this in condition callbacks", async () => {
@@ -444,6 +484,47 @@ describe("Condition tests", () => {
         expect(trackFn).toHaveBeenNthCalledWith(1, "satisfy");
         expect(trackFn).toHaveBeenNthCalledWith(2, "verify");
         expect(trackFn).toHaveBeenNthCalledWith(3, "entrypoint");
+      });
+
+      test("Should verify every time if option set", async () => {
+        const trackFn = jest.fn();
+
+        class TestRobot2 extends Robot {
+          @Condition("condition", { verifyEverytime: true })
+          conditionFn(): ConditionMethods {
+            return {
+              verify: async () => {
+                trackFn("verify");
+                return true;
+              },
+              satisfy: async () => {},
+            };
+          }
+
+          @Entrypoint()
+          testEntrypoint() {
+            return this.entrypoint(async () => {
+              await this.scope();
+              await this.scope();
+            });
+          }
+
+          @Scope()
+          @UseCondition("condition")
+          async scope() {
+            trackFn("scope");
+          }
+        }
+
+        const robot = new TestRobot2();
+        const run = robot.testEntrypoint();
+        await run.start();
+
+        expect(trackFn).toHaveBeenCalledTimes(4);
+        expect(trackFn).toHaveBeenNthCalledWith(1, "verify");
+        expect(trackFn).toHaveBeenNthCalledWith(2, "scope");
+        expect(trackFn).toHaveBeenNthCalledWith(3, "verify");
+        expect(trackFn).toHaveBeenNthCalledWith(4, "scope");
       });
     });
     // TODO: If scope fails, check conditions
