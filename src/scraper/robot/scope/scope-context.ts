@@ -1,6 +1,5 @@
-import { Feature, FeatureContext } from "../feature";
-import { ConditionMetadata } from "../metadata-helpers";
 import { RootScopeContext } from "./root-scope-context";
+import { Feature, FeatureContext } from "../feature";
 
 export class ScopeContext {
   #root!: RootScopeContext;

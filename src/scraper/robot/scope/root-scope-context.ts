@@ -1,13 +1,13 @@
 import { AbortController } from "abort-controller";
+import { Robot } from "../robot";
+import { ScopeContext } from "./scope-context";
+import { ScopeCallbacks } from "./types";
 import {
   Feature,
   FeatureConfiguration,
   FeatureContext,
   mapFeatureToContext,
 } from "../feature";
-import { Robot } from "../robot";
-import { ScopeContext } from "./scope-context";
-import { ScopeCallbacks } from "./types";
 
 export class RootScopeContext extends ScopeContext {
   readonly robot!: Robot;

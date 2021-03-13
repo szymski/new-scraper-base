@@ -1,9 +1,11 @@
 import { getCurrentScope } from "../scope";
 import { ScopeContext } from "../scope/scope-context";
-import { FeatureScopeVariableDescriptor } from "./descriptors";
-import { FeatureCallbackDescriptor } from "./descriptors/callback-descriptor";
-import { InitialVariableDescriptor } from "./descriptors/initial-variable-descriptor";
-import { ScopeDataTree } from "./descriptors/scope-data-tree-descriptor";
+import {
+  FeatureCallbackDescriptor,
+  FeatureScopeVariableDescriptor,
+  InitialVariableDescriptor,
+  ScopeDataTree,
+} from "./descriptors";
 import { Feature } from "./feature-class";
 
 /**

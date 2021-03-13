@@ -1,7 +1,7 @@
 import { AbortedException } from "../../exceptions";
 import { Entrypoint } from "../entrypoint";
-import { Feature } from "../feature";
 import { Robot } from "../robot";
+import { Feature } from "../feature";
 import { getCurrentScope, Scope } from "../scope";
 import { RootScopeContext } from "../scope/root-scope-context";
 import { ScopeContext } from "../scope/scope-context";
