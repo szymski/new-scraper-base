@@ -1,10 +1,11 @@
 import "reflect-metadata";
 import { AbortedException, ScopeException } from "../../exceptions";
 import { Feature } from "../feature";
-import { getClassConditions, ScopeParamMetadata, UseConditionMetadata } from "../metadata-helpers";
+import { ScopeParamMetadata, UseConditionMetadata } from "../metadata-helpers";
 import { RootScopeContext } from "./root-scope-context";
 import { ScopeContext } from "./scope-context";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
+import { ConditionFeature } from "../feature/features";
 
 export function formatScopeParams(
   params: any[],
@@ -20,7 +21,7 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
   callback: T,
   name: string,
   paramsMetadata: ScopeParamMetadata[] = [],
-  usedConditions: UseConditionMetadata[] = [],
+  usedConditions: UseConditionMetadata[] = []
 ) {
   return function (this: any, ...params: any[]) {
     const currentScope = getCurrentScopeNoFail();
@@ -39,15 +40,16 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       name,
       formatScopeParams(params, paramsMetadata)
     );
-    return getScopeStorage().run(scope, () => {
+    return getScopeStorage().run(scope, async () => {
       // Only call callback on non-root scopes
       if (scope.parent) {
         Feature.runCallback("onScopeEnter", scope);
       }
 
-      // Try to get each condition to ensure they exist
+      const conditionFeature = scope.feature(ConditionFeature);
+
       for (const condition of usedConditions) {
-        currentScope.root.robot.getCondition(condition.name);
+        await conditionFeature.verifyAndSatisfyCondition(condition.name);
       }
 
       // TODO: Clean this up

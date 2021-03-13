@@ -6,6 +6,7 @@ import {
   FeatureRunProperties,
   mapFeatureToRunProperties,
 } from "./feature";
+import { ConditionFeature } from "./feature/features/condition";
 import { DataFeature } from "./feature/features/data";
 import { Process } from "./process";
 import { Robot } from "./robot";
@@ -110,12 +111,13 @@ export class RobotRun<TData, TReturn> {
 
     Process.registerRobotRun(this);
 
-    this.#runPromise = runWithInitialScope(() => {
+    this.#runPromise = runWithInitialScope(async () => {
       Feature.runCallback("onRootScopeEnter", this.#rootScope);
 
-      // Try to get each condition to ensure they exist
+      const conditionFeature = this.rootScope.feature(ConditionFeature);
+
       for (const condition of this.#entrypoint.usedConditions) {
-        this.#robot.getCondition(condition.name);
+        await conditionFeature.verifyAndSatisfyCondition(condition.name);
       }
 
       const result = this.#fn()

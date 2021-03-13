@@ -1,8 +1,10 @@
 import { ConditionMethod } from "./condition";
 import { DataFeature } from "./feature/features";
-import { ConditionMetadata, getClassConditions } from "./metadata-helpers";
+import { ConditionMetadata,getClassConditions } from "./metadata-helpers";
 import { RobotRun } from "./robot-run";
 import { getCurrentScope } from "./scope";
+import { wrapWithScope } from "./scope/helpers";
+import { Logger } from "../util/logger";
 
 export class Robot {
   #conditions: ConditionMetadata[];
@@ -22,7 +24,7 @@ export class Robot {
     getCurrentScope().feature(DataFeature).reportData(type, data);
   }
 
-  getCondition(name: string) {
+  getCondition(name: string): ConditionMethod {
     const condition = this.#conditions.find(
       (condition) => condition.name === name
     );
@@ -38,7 +40,7 @@ export class Robot {
     }
 
     const conditionMethod = (this as any)[condition.methodName];
-    const conditionValue = conditionMethod();
+    const conditionValue = conditionMethod.apply(this);
 
     if (!("verify" in conditionValue && "satisfy" in conditionValue)) {
       throw new Error(
@@ -46,9 +48,11 @@ export class Robot {
       );
     }
 
-    this.#conditionValues.set(name, conditionValue);
+    const wrapped = wrapConditionInScopes(conditionValue, name);
 
-    return conditionValue;
+    this.#conditionValues.set(name, wrapped);
+
+    return wrapped;
   }
 
   /// Experimental feature
@@ -57,4 +61,14 @@ export class Robot {
       ? (...args: Partial<Args>) => Ret
       : never;
   } = this as any;
+}
+
+function wrapConditionInScopes(
+  conditionValue: ConditionMethod,
+  conditionName: string
+): ConditionMethod {
+  return {
+    verify: wrapWithScope(conditionValue.verify, `condition[${conditionName}].verify`),
+    satisfy: wrapWithScope(conditionValue.satisfy, `condition[${conditionName}].satisfy`),
+  };
 }
