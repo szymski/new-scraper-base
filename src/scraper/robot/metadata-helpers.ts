@@ -1,3 +1,5 @@
+import { ConditionOptions } from "./condition";
+
 export interface ScopeMetadata {
   name: string;
   methodName: string;
@@ -11,6 +13,7 @@ export interface EntrypointMetadata {
 export interface ConditionMetadata {
   name: string;
   methodName: string;
+  options: ConditionOptions;
 }
 
 export interface UseConditionMetadata {

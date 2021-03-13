@@ -1,4 +1,4 @@
-import { Condition, ConditionMethod, UseCondition } from "../condition";
+import { Condition, ConditionMethods, UseCondition } from "../condition";
 import { Entrypoint } from "../entrypoint";
 import {
   ClassMetadataKeys,
@@ -13,7 +13,7 @@ import { Scope } from "../scope";
 describe("Condition tests", () => {
   class TestRobot extends Robot {
     @Condition("condition")
-    conditionFn(): ConditionMethod {
+    conditionFn(): ConditionMethods {
       return {
         verify: async () => true,
         satisfy: async () => {},
@@ -52,6 +52,7 @@ describe("Condition tests", () => {
         {
           name: "condition",
           methodName: "conditionFn",
+          options: {},
         } as ConditionMetadata,
       ]);
     });
@@ -71,8 +72,8 @@ describe("Condition tests", () => {
       const value1 = robot.getCondition("condition");
       const value2 = robot.getCondition("condition");
 
-      expect(value1).toHaveProperty("verify");
-      expect(value1).toHaveProperty("satisfy");
+      expect(value1.methods).toHaveProperty("verify");
+      expect(value1.methods).toHaveProperty("satisfy");
       expect(value1).toBe(value2);
     });
   });
@@ -93,7 +94,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("true-condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           return {
             verify: async () => {
               trackFn("verify");
@@ -126,7 +127,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("true-condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           return {
             verify: async () => {
               trackFn("verify");
@@ -164,7 +165,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           let satisfied = false;
           return {
             verify: async () => {
@@ -203,7 +204,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           let satisfied = false;
           return {
             verify: async () => {
@@ -247,7 +248,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           return {
             verify: async () => {
               trackFn("verify");
@@ -284,7 +285,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           return {
             verify: async () => {
               trackFn("verify");
@@ -328,7 +329,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           let satisfied = false;
           return {
             verify: async () => {
@@ -374,7 +375,7 @@ describe("Condition tests", () => {
 
       class TestRobot2 extends Robot {
         @Condition("true-condition")
-        conditionFn(): ConditionMethod {
+        conditionFn(): ConditionMethods {
           let satisfied = false;
           return {
             verify: async () => {
@@ -408,6 +409,43 @@ describe("Condition tests", () => {
       expect(trackFn).toHaveBeenNthCalledWith(4, "entrypoint");
     });
 
+    describe("Options", () => {
+      test("Should skip verify and satisfy first if option set", async () => {
+        const trackFn = jest.fn();
+
+        class TestRobot2 extends Robot {
+          @Condition("condition", { verifyFirst: false })
+          conditionFn(): ConditionMethods {
+            return {
+              verify: async () => {
+                trackFn("verify");
+                return true;
+              },
+              satisfy: async () => {
+                trackFn("satisfy");
+              },
+            };
+          }
+
+          @Entrypoint()
+          @UseCondition("condition")
+          testEntrypoint() {
+            return this.entrypoint(async () => {
+              trackFn("entrypoint");
+            });
+          }
+        }
+
+        const robot = new TestRobot2();
+        const run = robot.testEntrypoint();
+        await run.start();
+
+        expect(trackFn).toHaveBeenCalledTimes(3);
+        expect(trackFn).toHaveBeenNthCalledWith(1, "satisfy");
+        expect(trackFn).toHaveBeenNthCalledWith(2, "verify");
+        expect(trackFn).toHaveBeenNthCalledWith(3, "entrypoint");
+      });
+    });
     // TODO: If scope fails, check conditions
   });
 });

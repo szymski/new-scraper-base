@@ -1,14 +1,18 @@
-import { ConditionMethod } from "./condition";
+import { ConditionMethods, ConditionOptions } from "./condition";
 import { DataFeature } from "./feature/features";
 import { ConditionMetadata,getClassConditions } from "./metadata-helpers";
 import { RobotRun } from "./robot-run";
 import { getCurrentScope } from "./scope";
 import { wrapWithScope } from "./scope/helpers";
-import { Logger } from "../util/logger";
+
+export interface ConditionWithOptions {
+  methods: ConditionMethods;
+  options: ConditionOptions;
+}
 
 export class Robot {
   #conditions: ConditionMetadata[];
-  #conditionValues = new Map<string, ConditionMethod>();
+  #conditionValues = new Map<string, ConditionWithOptions>();
 
   constructor() {
     this.#conditions = getClassConditions(Object.getPrototypeOf(this));
@@ -24,7 +28,7 @@ export class Robot {
     getCurrentScope().feature(DataFeature).reportData(type, data);
   }
 
-  getCondition(name: string): ConditionMethod {
+  getCondition(name: string): ConditionWithOptions {
     const condition = this.#conditions.find(
       (condition) => condition.name === name
     );
@@ -50,9 +54,14 @@ export class Robot {
 
     const wrapped = wrapConditionInScopes(conditionValue, name);
 
-    this.#conditionValues.set(name, wrapped);
+    const result: ConditionWithOptions = {
+      methods: wrapped,
+      options: condition.options,
+    };
 
-    return wrapped;
+    this.#conditionValues.set(name, result);
+
+    return result;
   }
 
   /// Experimental feature
@@ -64,9 +73,9 @@ export class Robot {
 }
 
 function wrapConditionInScopes(
-  conditionValue: ConditionMethod,
+  conditionValue: ConditionMethods,
   conditionName: string
-): ConditionMethod {
+): ConditionMethods {
   return {
     verify: wrapWithScope(conditionValue.verify, `condition[${conditionName}].verify`),
     satisfy: wrapWithScope(conditionValue.satisfy, `condition[${conditionName}].satisfy`),

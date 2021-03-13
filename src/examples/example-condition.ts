@@ -4,7 +4,7 @@ import { NodeFetchPerformer } from "../scraper/http-client/performers/node-fetch
 import { Entrypoint, Robot, Scope } from "../scraper/robot";
 import {
   Condition,
-  ConditionMethod,
+  ConditionMethods,
   UseCondition,
 } from "../scraper/robot/condition";
 import { Logger } from "../scraper/util/logger";
@@ -19,8 +19,8 @@ class TestRobot extends Robot {
     this.client.config.add.interceptor(persistCookieInterceptor());
   }
 
-  @Condition("must-be-logged-in")
-  loginCondition(): ConditionMethod {
+  @Condition("must-be-logged-in", { verifyFirst: false })
+  loginCondition(): ConditionMethods {
     return {
       verify: async () => {
         const $ = await this.client.get("/").cheerio();

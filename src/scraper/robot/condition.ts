@@ -3,17 +3,29 @@ import {
   addMethodMetadata,
   ClassMetadataKeys,
   ConditionMetadata,
-  MethodMetadataKeys, UseConditionMetadata,
+  MethodMetadataKeys,
+  UseConditionMetadata,
 } from "./metadata-helpers";
 
-export interface ConditionMethod {
+export interface ConditionMethods {
   verify(): Promise<boolean>;
 
   satisfy(): Promise<void>;
 }
 
+export interface ConditionOptions {
+  /**
+   * Indicates if verification should be performed before satisfying.
+   * If false, satisfy method will always be called first on each robot run.
+   */
+  verifyFirst?: boolean;
+}
+
 // TODO: Condition function could be memoized
-export function Condition(name: string): MethodDecorator {
+export function Condition(
+  name: string,
+  options?: ConditionOptions
+): MethodDecorator {
   return <T extends number | any>(
     target: Object,
     propertyKey: string | symbol
@@ -21,6 +33,7 @@ export function Condition(name: string): MethodDecorator {
     const metadata: ConditionMetadata = {
       name: name ?? propertyKey.toString(),
       methodName: propertyKey.toString(),
+      options: options ?? {},
     };
     addClassMetadata(target, ClassMetadataKeys.ConditionMethods, metadata);
   };
