@@ -3,12 +3,16 @@ import {
   addClassMetadata,
   ClassMetadataKeys,
   EntrypointMetadata,
+  getClassConditions,
+  getScopeConditions,
+  UseConditionMetadata,
 } from "./metadata-helpers";
 
 // TODO: Clean this mess, WTF, what did I do, lol
 
-interface EntrypointContext {
+export interface EntrypointContext {
   name: string;
+  usedConditions: UseConditionMetadata[];
 }
 
 const entrypointStorage = new AsyncLocalStorage<EntrypointContext>();
@@ -19,9 +23,6 @@ export function Entrypoint(name?: string) {
     propertyKey: string | symbol,
     descriptor: TypedPropertyDescriptor<T>
   ) => {
-    const context: EntrypointContext = {
-      name: name ?? propertyKey.toString(),
-    };
     const metadata: EntrypointMetadata = {
       name: name ?? propertyKey.toString(),
       methodName: propertyKey.toString(),
@@ -31,6 +32,13 @@ export function Entrypoint(name?: string) {
     const original: any = descriptor.value;
 
     descriptor.value = function (this: any, ...params: any[]) {
+      const usedConditions = getScopeConditions(target, propertyKey);
+
+      const context: EntrypointContext = {
+        name: name ?? propertyKey.toString(),
+        usedConditions,
+      };
+
       const robot = this;
       return entrypointStorage.run(context, () =>
         original.apply(robot, params)

@@ -34,7 +34,7 @@ export const persistCookieInterceptor = (
     interceptResponse: async (output, config, context) => {
       if (output.success) {
         // TODO: There might be multiple Set-Cookie headers, but such form of HTTP response is obsolete (https://stackoverflow.com/a/6375214/4272179)
-        // If cookie persistence on older websites won't for for some reason, this is the potential root of the problem
+        // If cookie persistence on older websites won't work for for some reason, this is the potential root of the problem
         const setCookieHeader = Object.entries(output.headers).find(
           (header) => header[0].toLowerCase() === "set-cookie"
         );

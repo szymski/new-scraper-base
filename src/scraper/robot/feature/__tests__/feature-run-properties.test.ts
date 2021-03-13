@@ -1,7 +1,7 @@
-import { Feature } from "../feature-class";
 import { ScopeContext } from "../../scope/scope-context";
 import { FeatureConfiguration } from "../configuration";
 import { mapFeatureToRunProperties } from "../feature-run-properties";
+import { Feature } from "../feature-class";
 
 describe("Feature run properties tests", () => {
   describe("Initial methods prefixed with 'init_'", () => {

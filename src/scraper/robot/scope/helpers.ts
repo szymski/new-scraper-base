@@ -1,10 +1,11 @@
 import "reflect-metadata";
 import { AbortedException, ScopeException } from "../../exceptions";
 import { Feature } from "../feature";
-import { ScopeParamMetadata } from "../metadata-helpers";
+import { ScopeParamMetadata, UseConditionMetadata } from "../metadata-helpers";
 import { RootScopeContext } from "./root-scope-context";
 import { ScopeContext } from "./scope-context";
 import { getCurrentScopeNoFail, getScopeStorage } from "./storage";
+import { ConditionFeature } from "../feature/features";
 
 export function formatScopeParams(
   params: any[],
@@ -19,7 +20,8 @@ export function formatScopeParams(
 export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
   callback: T,
   name: string,
-  paramsMetadata: ScopeParamMetadata[] = []
+  paramsMetadata: ScopeParamMetadata[] = [],
+  usedConditions: UseConditionMetadata[] = []
 ) {
   return function (this: any, ...params: any[]) {
     const currentScope = getCurrentScopeNoFail();
@@ -38,10 +40,16 @@ export function wrapWithScope<T extends (...params: any[]) => Promise<any>>(
       name,
       formatScopeParams(params, paramsMetadata)
     );
-    return getScopeStorage().run(scope, () => {
+    return getScopeStorage().run(scope, async () => {
       // Only call callback on non-root scopes
       if (scope.parent) {
         Feature.runCallback("onScopeEnter", scope);
+      }
+
+      const conditionFeature = scope.feature(ConditionFeature);
+
+      for (const condition of usedConditions) {
+        await conditionFeature.verifyAndSatisfyCondition(condition.name);
       }
 
       // TODO: Clean this up

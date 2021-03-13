@@ -1,3 +1,5 @@
+import { ConditionOptions } from "./condition";
+
 export interface ScopeMetadata {
   name: string;
   methodName: string;
@@ -8,6 +10,16 @@ export interface EntrypointMetadata {
   methodName: string;
 }
 
+export interface ConditionMetadata {
+  name: string;
+  methodName: string;
+  options: ConditionOptions;
+}
+
+export interface UseConditionMetadata {
+  name: string;
+}
+
 export interface ScopeParamMetadata {
   index: number;
   name: string;
@@ -16,15 +28,34 @@ export interface ScopeParamMetadata {
 export const ClassMetadataKeys = {
   ScopeMethods: Symbol("ScopeMethods"),
   EntrypointMethods: Symbol("EntrypointMethods"),
+  ConditionMethods: Symbol("ConditionMethods"),
 } as const;
 
 export const MethodMetadataKeys = {
   Scope: Symbol("Scope"),
   ScopeParam: Symbol("ScopeParam"),
+  ScopeConditions: Symbol("ScopeConditions"),
 } as const;
 
 export function getScopeMethods(target: any): ScopeMetadata[] {
   return Reflect.getMetadata(ClassMetadataKeys.ScopeMethods, target) || [];
+}
+
+export function getClassConditions(target: any): ConditionMetadata[] {
+  return Reflect.getMetadata(ClassMetadataKeys.ConditionMethods, target) || [];
+}
+
+export function getScopeConditions(
+  target: any,
+  propertyKey: string | symbol
+): UseConditionMetadata[] {
+  return (
+    Reflect.getMetadata(
+      MethodMetadataKeys.ScopeConditions,
+      target,
+      propertyKey
+    ) || []
+  );
 }
 
 export function getScopeParams(

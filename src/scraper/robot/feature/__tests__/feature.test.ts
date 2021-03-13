@@ -1,3 +1,4 @@
+import "../../robot"; // TODO: Test fails if this import is missing
 import { Feature } from "../feature-class";
 
 describe("Feature tests", () => {

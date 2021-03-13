@@ -1,5 +1,5 @@
-import { Feature, FeatureContext } from "../feature";
 import { RootScopeContext } from "./root-scope-context";
+import { Feature, FeatureContext } from "../feature";
 
 export class ScopeContext {
   #root!: RootScopeContext;

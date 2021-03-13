@@ -1,4 +1,3 @@
-import { RootScopeContext } from "../scope/root-scope-context";
 import { ScopeContext } from "../scope/scope-context";
 import {
   FeatureCallbackDescriptor,
@@ -8,6 +7,7 @@ import {
 } from "./descriptors";
 import { OutputVariableDescriptor } from "./descriptors/output-variable-descriptor";
 import { RootScopeVariableDescriptor } from "./descriptors/scope-variable-descriptor";
+import { RootScopeContext } from "../scope/root-scope-context";
 
 // TODO: Consider passing scope as a parameter only when attribute @Context() is added
 
