@@ -166,7 +166,31 @@ describe("HttpRequestBuilder", () => {
       });
     });
 
-    describe("URL preparation", async () => {
+    test("Should prepare post with url encoded body", async () => {
+      const performer = mockPerformer();
+      const performerSpy = jest.spyOn(performer, "perform");
+
+      const client = new HttpClient(performer);
+
+      const form = new URLSearchParams();
+      form.set("abc", "123");
+      form.set("test", "hello");
+      await client.put("some_url").add.urlEncodedBody(form).text();
+
+      expect(performerSpy).toBeCalledWith({
+        method: "put",
+        url: "some_url",
+        bodyType: "text",
+        body: "abc=123&test=hello",
+        headers: expect.objectContaining({
+          "Content-Type": "application/x-www-form-urlencoded",
+        }),
+        cookies: undefined,
+        responseType: "text",
+      });
+    });
+
+    describe("URL preparation", () => {
       let spy: jest.SpyInstance;
       let client: HttpClient;
 

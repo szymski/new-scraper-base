@@ -280,7 +280,6 @@ export class HttpRequestBuilder {
       return this;
     },
     urlEncodedBody: (form: URLSearchParams) => {
-      // TODO: Url encoded body tests
       this.add.header("Content-Type", "application/x-www-form-urlencoded");
       this.#body.type = "text";
       this.#body.value = form.toString();
