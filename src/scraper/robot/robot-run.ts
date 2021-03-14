@@ -117,6 +117,7 @@ export class RobotRun<TData, TReturn> {
 
           if (e instanceof ScopeException) {
             Feature.runCallback("onScopeError", this.#rootScope, e.scope, e);
+            this.callbacks.onErrored(e.original);
             throw e.original;
           } else {
             Feature.runCallback(
@@ -125,6 +126,7 @@ export class RobotRun<TData, TReturn> {
               this.#rootScope,
               e
             );
+            this.callbacks.onErrored(e.original);
             throw e;
           }
         })
@@ -213,7 +215,19 @@ export class RobotRun<TData, TReturn> {
   }
 
   readonly callbacks = {
+    /**
+     * Called when the run finishes successfully.
+     */
     onFinished: () => {},
+
+    /**
+     * Called when the run is cancelled.
+     */
     onCancelled: () => {},
+
+    /**
+     * Called when the run errors.
+     */
+    onErrored: (error: Error) => {},
   };
 }
