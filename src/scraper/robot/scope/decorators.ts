@@ -58,7 +58,7 @@ export function Scope(name?: string): MethodDecorator {
   };
 }
 
-// TODO: Get the param name automatically. I used to wonder why libraries often don't do that. Now I understand why.
+// TODO: Maybe get parameter name by parsing function toString result?
 export function ScopeParam(name: string): ParameterDecorator {
   return function (target: any, propertyKey: string | symbol, index: number) {
     const metadata: ScopeParamMetadata = {

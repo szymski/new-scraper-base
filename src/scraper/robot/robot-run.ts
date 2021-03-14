@@ -8,6 +8,7 @@ import {
 } from "./feature";
 import { ConditionFeature } from "./feature/features/condition";
 import { DataFeature } from "./feature/features/data";
+import { MetricsFeature } from "./feature/features/metrics";
 import { Process } from "./process";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
@@ -56,6 +57,7 @@ export class RobotRun<TData, TReturn> {
 
   private bootstrapFeatures() {
     this.feature(DataFeature);
+    this.feature(MetricsFeature);
   }
 
   get status() {
