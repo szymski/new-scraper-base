@@ -3,12 +3,9 @@ import {
   addClassMetadata,
   ClassMetadataKeys,
   EntrypointMetadata,
-  getClassConditions,
   getScopeConditions,
   UseConditionMetadata,
 } from "./metadata-helpers";
-
-// TODO: Clean this mess, WTF, what did I do, lol
 
 export interface EntrypointContext {
   name: string;
@@ -17,7 +14,7 @@ export interface EntrypointContext {
 
 const entrypointStorage = new AsyncLocalStorage<EntrypointContext>();
 
-export function Entrypoint(name?: string) {
+export function Entrypoint(name?: string): MethodDecorator {
   return <T extends number | any>(
     target: Object,
     propertyKey: string | symbol,
@@ -44,8 +41,6 @@ export function Entrypoint(name?: string) {
         original.apply(robot, params)
       );
     } as any;
-
-    descriptor.writable = false;
   };
 }
 
