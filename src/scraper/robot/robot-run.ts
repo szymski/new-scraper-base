@@ -12,7 +12,6 @@ import { Process } from "./process";
 import { Robot } from "./robot";
 import { runWithInitialScope } from "./scope/helpers";
 import { RootScopeContext } from "./scope/root-scope-context";
-import { RobotOutputData } from "./types";
 
 export type RobotRunStatus =
   | "initial"
@@ -51,14 +50,6 @@ export class RobotRun<TData, TReturn> {
     this.#entrypoint = getEntrypointContext();
 
     this.#rootScope = RootScopeContext.create(this.#entrypoint.name, robot);
-    this.#rootScope.callbacks.onDataReceived = (type, data) => {
-      if (!this.#rootScope.abortController.signal.aborted) {
-        this.callbacks.onDataReceived({
-          type,
-          data,
-        } as RobotOutputData<TData>);
-      }
-    };
 
     this.bootstrapFeatures();
   }
@@ -222,7 +213,6 @@ export class RobotRun<TData, TReturn> {
   }
 
   readonly callbacks = {
-    onDataReceived: (output: RobotOutputData<TData>) => {},
     onFinished: () => {},
     onCancelled: () => {},
   };
